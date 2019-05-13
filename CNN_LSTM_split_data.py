@@ -16,7 +16,7 @@ class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutti
 def split_cholec_data(image_dir, label_dir, ratio=0.2):
 
   #image_files = glob.glob(image_dir+"*.jpg")
-  label_files = glob.glob(label_dir+"*.txt")
+  label_files = glob.glob(label_dir+"video*.txt")
 
   train_array = list()
   test_array = list()
