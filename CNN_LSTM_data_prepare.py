@@ -46,12 +46,15 @@ def generate_gt_data(in_file):
 for video_num, file in enumerate(video_files):
      file_name = file.split('/')[-1]
      file_name = os.path.splitext(file_name)[0]
-     image_name = image_dir+file_name+'-%d.jpg'
-     print(file_name, file, image_name)
+     image_name = image_dir+file_name+'/'+file_name+'-%d.jpg'
+     
+     image_folder_cmd = "mkdir " + image_dir+file_name
+     os.system(image_folder_cmd)
+     print(file_name, file, image_name+'\n')
      
      #extract images from videos
      
-     extract_images(file, image_name)
+     #extract_images(file, image_name)
      
      #resize images to 250 x 250. Currently hardcoded to 250 x 250.
      #existing images are overwritten
