@@ -10,7 +10,7 @@ label_dir = base_dir+"labels/"
 import pdb
 video_files = glob.glob(video_dir+"*.mp4")
 
-num_videos = 1
+num_videos = 2
 
 
 def extract_images(video,output):
@@ -54,7 +54,7 @@ for video_num, file in enumerate(video_files):
      
      #extract images from videos
      
-     #extract_images(file, image_name)
+     extract_images(file, image_name)
      
      #resize images to 250 x 250. Currently hardcoded to 250 x 250.
      #existing images are overwritten
