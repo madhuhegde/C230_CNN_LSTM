@@ -7,6 +7,7 @@ import numpy as np
 #base_dir = "/Users/madhuhegde/Downloads/cholec80/"
 #image_dir = base_dir+"images/"
 #label_dir = base_dir+"labels/"
+frames_per_clip = 10
 
 class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutting\n":2, 
            "GallbladderDissection\n":3, "GallbladderPackaging\n":4, "CleaningCoagulation\n":5, "GallbladderRetraction\n":6}
@@ -69,5 +70,33 @@ def load_cholec_data(image_dir, label_dir, frames_per_clip, array_index):
   
       
 
-      
+def generator(samples, batch_size=32):
+    num_samples = len(samples)
+    
+    while 1: # Loop forever so the generator never terminates
+        #shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+
+            images = []
+            phases = []
+            for batch_sample in batch_samples:
+                image_file = batch_sample[0]
+                #phase = batch_sample[1]
+                phase = class_labels[batch_sample[1].split('\t')[1]]
+                image = cv2.imread(image_file)
+                image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+                #image = (image-128.0)/128.0;
+                image = image/255.0
+                
+                images.append([image]*frames_per_clip)
+                phases.append(phase)
+
+            
+            # trim image to only see section with road
+            X_batch = np.array(images)
+            classes_one_hot = np.zeros((len(phases), len(class_labels)))
+            classes_one_hot[np.arange(len(phases)), phases] = 1  
+            y_batch = classes_one_hot
+            yield (X_batch, y_batch)      
 
