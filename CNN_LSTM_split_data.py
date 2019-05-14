@@ -9,8 +9,8 @@ import random
 #image_dir = base_dir+"images/"
 #label_dir = base_dir+"labels/"
 
-class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutting\n":2, 
-           "GallbladderDissection\n":3, "GallbladderPackaging\n":4, "CleaningCoagulation\n":5, "GallbladderRetraction\n":6}
+class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
 
 def split_cholec_data(image_dir, label_dir, ratio=0.2):
@@ -93,6 +93,7 @@ def train_test_data_split(image_dir, label_dir, ratio=0.2):
     label_file_name = label_file.split('/')[-1]
       
     image_folder = image_dir+label_file_name.replace('-label.txt', '')
+    print("Image Folder:"+ image_folder)
     image_files = glob.glob(image_folder+"/video*.jpg")
     image_files.sort(key=os.path.getmtime)
       

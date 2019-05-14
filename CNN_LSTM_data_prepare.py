@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "data/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_dir = base_dir+"videos/"
 image_dir = base_dir+"images/"
@@ -10,7 +10,7 @@ label_dir = base_dir+"labels/"
 import pdb
 video_files = glob.glob(video_dir+"*.mp4")
 
-num_videos = 2
+num_videos = 25 
 
 
 def extract_images(video,output):

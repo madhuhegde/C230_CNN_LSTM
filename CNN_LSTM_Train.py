@@ -15,7 +15,7 @@ from keras.optimizers import Nadam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "data/"
 image_dir = base_dir+"images/"
 label_dir = base_dir+"labels/"
 
@@ -79,7 +79,7 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 32 # increase if your system can cope with more data
+BATCH_SIZE = 8 # increase if your system can cope with more data
 nb_epochs = 2 # I once achieved 50% accuracy with 400 epochs. Feel free to change
 
 
