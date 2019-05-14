@@ -26,7 +26,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 10
+frames = 4
 channels = 3
 rows = 224
 columns = 224 
@@ -41,7 +41,7 @@ cnn_base = VGG16(input_shape=(rows,columns,channels),
 
 cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
-cnn = Model(input=cnn_base.input, output=cnn_out)
+cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 
 cnn.trainable = False
 #cnn.trainable = True
@@ -90,8 +90,8 @@ train_test_split_ratio = 0.2
 
 print ("Loading train data")
 # load training data
-train_generator = generator(train_samples, batch_size=BATCH_SIZE)
-validation_generator = generator(validation_samples, batch_size=BATCH_SIZE)
+train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
+validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
