@@ -4,6 +4,7 @@ import os
 import subprocess
 import glob
 import numpy as np
+import random
 #base_dir = "/Users/madhuhegde/Downloads/cholec80/"
 #image_dir = base_dir+"images/"
 #label_dir = base_dir+"labels/"
@@ -74,7 +75,7 @@ def generator(samples, batch_size=32, frames_per_clip=4):
     num_samples = len(samples)
     
     while 1: # Loop forever so the generator never terminates
-        #shuffle(samples)
+        random.shuffle(samples)
         for offset in range(0, num_samples, batch_size):
             batch_samples = samples[offset:offset+batch_size]
 
@@ -84,6 +85,7 @@ def generator(samples, batch_size=32, frames_per_clip=4):
                 image_file = batch_sample[0]
                 #phase = batch_sample[1]
                 phase = class_labels[batch_sample[1].split('\t')[1]]
+                
                 image = cv2.imread(image_file)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
                 #image = (image-128.0)/128.0;

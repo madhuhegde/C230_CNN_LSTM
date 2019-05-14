@@ -34,7 +34,8 @@ def split_cholec_data(image_dir, label_dir, ratio=0.2):
       #print(train_seg_array)
       test_seg_array = []
       for i in range(int(len(labels)/10)):
-         test_seg_array.extend(random.sample(range(i*10, (i+1)*10), test_ratio))
+         #test_seg_array.extend(random.sample(range(i*10, (i+1)*10), test_ratio))
+         test_seg_array.extend([i*10+2, i*10+5])
         
       test_seg_array.sort()
       test_seg_array = np.array(test_seg_array)
@@ -71,7 +72,9 @@ def train_test_data_split(image_dir, label_dir, ratio=0.2):
      
     test_clip_list = []
     for i in range(int(len(labels)/10)):
-         test_clip_list.extend(random.sample(range(i*10, (i+1)*10), test_ratio))
+         #test_clip_list.extend(random.sample(range(i*10, (i+1)*10), test_ratio))
+         test_clip_list.extend([i*10+2, i*10+5])
+        
         
     test_clip_list.sort()
     #print(test_clip_list[0:6])
