@@ -58,7 +58,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4):
         for offset in range(0, num_samples, batch_size*frames_per_clip):
             batch_samples = samples[offset:offset+batch_size*frames_per_clip]
             
-            print('/t',offset, len(batch_samples))
+            print('\t',offset, len(batch_samples))
 
             images = []
             phases = []
