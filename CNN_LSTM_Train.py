@@ -26,7 +26,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 10
+frames = 25
 channels = 3
 rows = 224
 columns = 224 
@@ -38,10 +38,14 @@ video = Input(shape=(frames,rows,columns,channels))
 cnn_base = VGG16(input_shape=(rows,columns,channels),
                  weights="imagenet",
                  include_top=False)
+                 
+#Use Transfer learning and train only last 4 layers                 
+for layer in cnn_base.layers[:-4]:
+   layer.trainable = False                 
 
 cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
-cnn = Model(input=cnn_base.input, output=cnn_out)
+cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 
 cnn.trainable = False
 #cnn.trainable = True
@@ -79,8 +83,8 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 8 # increase if your system can cope with more data
-nb_epochs = 100 # I once achieved 50% accuracy with 400 epochs. Feel free to change
+BATCH_SIZE = 16 # increase if your system can cope with more data
+nb_epochs = 4 # I once achieved 50% accuracy with 400 epochs. Feel free to change
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -90,8 +94,8 @@ train_test_split_ratio = 0.2
 
 print ("Loading train data")
 # load training data
-train_generator = generator(train_samples, batch_size=BATCH_SIZE)
-validation_generator = generator(validation_samples, batch_size=BATCH_SIZE)
+train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
+validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
 history = LossHistory()
 model.fit_generator(train_generator, 

@@ -4,10 +4,11 @@ import os
 import subprocess
 import glob
 import numpy as np
+import random
 #base_dir = "/Users/madhuhegde/Downloads/cholec80/"
 #image_dir = base_dir+"images/"
 #label_dir = base_dir+"labels/"
-frames_per_clip = 10
+
 
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
@@ -70,11 +71,11 @@ def load_cholec_data(image_dir, label_dir, frames_per_clip, array_index):
   
       
 
-def generator(samples, batch_size=8):
+def generator(samples, batch_size=32, frames_per_clip=4):
     num_samples = len(samples)
     
     while 1: # Loop forever so the generator never terminates
-        #shuffle(samples)
+        random.shuffle(samples)
         for offset in range(0, num_samples, batch_size):
             batch_samples = samples[offset:offset+batch_size]
 
