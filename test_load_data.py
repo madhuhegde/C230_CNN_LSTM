@@ -7,8 +7,8 @@ import os
 import subprocess
 import glob
 import numpy as np
-from CNN_LSTM_split_data import split_cholec_data, generate_feature_list
-from CNN_LSTM_load_data import load_cholec_data, generator_train, generator_test
+from CNN_LSTM_split_data import  generate_feature_list
+from CNN_LSTM_load_data import  generator_train, generator_test
 
 base_dir = "/Users/madhuhegde/Downloads/cholec80/"
 base_image_dir = base_dir+"images/"
@@ -26,17 +26,17 @@ print(len(train_list))
 test_list = generate_feature_list(test_image_dir, test_label_dir)
 print(len(test_list))
 
+
 train_generator = generator_train(train_list, 4, 4)
 
+#for i in range(int(len(train_list)/16)):
+#  [X, y] = train_generator.__next__()
 
-[X, y] = train_generator.__next__()
-
-print(X.shape, y.shape)
 
 test_generator = generator_test(test_list, 4, 4)
 
-
-[X, y] = test_generator.__next__()
+for i in range(int(len(test_list)/16)):
+ [X, y] = test_generator.__next__()
 
 print(X.shape, y.shape)
 

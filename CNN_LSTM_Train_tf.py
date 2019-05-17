@@ -30,7 +30,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 4
+frames = 15
 channels = 3
 rows = 224
 columns = 224 
@@ -92,8 +92,8 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 2 # increase if your system can cope with more data
-nb_epochs = 4 # I once achieved 50% accuracy with 400 epochs. Feel free to change
+BATCH_SIZE = 16 # increase if your system can cope with more data
+nb_epochs = 2 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -108,10 +108,10 @@ train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_p
 validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
 model.fit_generator(train_generator, 
-            steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
+            steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
-            validation_steps=int(len(validation_samples)/BATCH_SIZE), 
-            epochs=2, verbose=1)
+            validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
+            epochs=nb_epochs, verbose=1)
 
 
 
