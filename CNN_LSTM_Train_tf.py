@@ -15,7 +15,7 @@ from tensorflow.keras.optimizers import Nadam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -92,8 +92,8 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 16 # increase if your system can cope with more data
-nb_epochs = 2 # 
+BATCH_SIZE = 32 # increase if your system can cope with more data
+nb_epochs = 10 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -101,7 +101,12 @@ nb_epochs = 2 #
 
 train_samples  = generate_feature_list(train_image_dir, train_label_dir)
 validation_samples = generate_feature_list(test_image_dir, test_label_dir)
-
+train_len = int(len(train_samples)/(BATCH_SIZE*frames))
+train_len = (train_len-2)*BATCH_SIZE*frames
+train_samples = train_samples[0:train_len]
+validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+validation_len = (validation_len-2)*BATCH_SIZE*frames
+validation_samples = validation_samples[0:validation_len]
 print ("Loading train data")
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)

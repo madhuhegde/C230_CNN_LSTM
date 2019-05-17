@@ -10,7 +10,7 @@ import numpy as np
 from CNN_LSTM_split_data import  generate_feature_list
 from CNN_LSTM_load_data import  generator_train, generator_test
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"

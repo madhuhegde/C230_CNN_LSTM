@@ -5,7 +5,7 @@ import subprocess
 import glob
 import numpy as np
 import random
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 base_image_dir = base_dir +"images/"
 train_image_dir = base_image_dir+"train/"
 test_image_dir = base_image_dir+"test/"
@@ -58,7 +58,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4):
         for offset in range(0, num_samples, batch_size*frames_per_clip):
             batch_samples = samples[offset:offset+batch_size*frames_per_clip]
             
-            #print(offset, len(batch_samples))
+            print('/t',offset, len(batch_samples))
 
             images = []
             phases = []

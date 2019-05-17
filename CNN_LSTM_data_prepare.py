@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"
@@ -83,7 +83,7 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1):
   
   
 if __name__ == "__main__":
-     num_train_videos = 1
+     num_train_videos = 2
      num_test_videos = 1
      train_video_path = video_base_dir+"train/"
      test_video_path = video_base_dir+"test/"
