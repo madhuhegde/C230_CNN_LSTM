@@ -65,7 +65,7 @@ model = Model([video], outputs)
 
 model.summary()
 
-optimizer = Nadam(lr=0.002,
+optimizer = Nadam(lr=0.01,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -84,7 +84,7 @@ model.compile(loss="categorical_crossentropy",
 
 #training parameters
 BATCH_SIZE = 16 # increase if your system can cope with more data
-nb_epochs = 4 # I once achieved 50% accuracy with 400 epochs. Feel free to change
+nb_epochs = 1 # I once achieved 50% accuracy with 400 epochs. Feel free to change
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -105,7 +105,6 @@ model.fit_generator(train_generator,
             epochs=nb_epochs, verbose=1, callbacks=[history])
 
 logfile = open('logs/losses.txt', 'wt')
-logfile.write(history.losses)
+logfile.write('\n'.join(str(l) for l in history.losses))
 logfile.close()
-
 
