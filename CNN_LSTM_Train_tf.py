@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import time
-from CNN_LSTM_load_data import load_cholec_data, generator
-from CNN_LSTM_split_data import split_cholec_data, train_test_data_split
+from CNN_LSTM_load_data import  generator_train, generator_test
+from CNN_LSTM_split_data import generate_feature_list
 import tensorflow
 
 from tensorflow.keras.applications.vgg16 import VGG16
@@ -16,8 +16,12 @@ from tensorflow.keras.optimizers import Nadam
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 base_dir = "/Users/madhuhegde/Downloads/cholec80/"
-image_dir = base_dir+"images/"
-label_dir = base_dir+"labels/"
+base_image_dir = base_dir+"images/"
+base_label_dir = base_dir+"labels/"
+test_image_dir = base_image_dir + "test/"
+test_label_dir = base_label_dir + "test/"
+train_image_dir = base_image_dir + "train/"
+train_label_dir = base_label_dir + "train/"
 
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
@@ -93,14 +97,15 @@ nb_epochs = 4 # I once achieved 50% accuracy with 400 epochs. Feel free to chang
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
-train_test_split_ratio = 0.2
-#[train_array, test_array] = split_cholec_data(image_dir, label_dir, train_test_split_ratio)
-[train_samples, validation_samples]  = train_test_data_split(image_dir, label_dir, 0.2)
+
+
+train_samples  = generate_feature_list(train_image_dir, train_label_dir)
+validation_samples = generate_feature_list(test_image_dir, test_label_dir)
 
 print ("Loading train data")
 # load training data
-train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
-validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
+train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
+validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 

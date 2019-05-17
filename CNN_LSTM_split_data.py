@@ -108,3 +108,35 @@ def train_test_data_split(image_dir, label_dir, ratio=0.2):
  
   return(train_list, test_list)
 
+
+def generate_feature_list(image_dir, label_dir):
+
+  
+  label_files = glob.glob(label_dir+"video*.txt")
+
+  feature_list = list()
+  
+
+  for label_file in label_files:
+    with open(label_file) as handle:
+      #Read extra line that says Frames Phases
+      handle.readline()
+      labels = handle.readlines()
+      
+    print(len(labels))
+    label_file_name = label_file.split('/')[-1]
+      
+    image_folder = image_dir+label_file_name.replace('-label.txt', '')
+    image_files = glob.glob(image_folder+"/video*.jpg")
+    image_files.sort(key=os.path.getmtime)
+    print(len(image_files))
+    local_image_files = list()
+    for image_file in image_files:
+      file_name = image_file.split('/')
+      local_image_files.append(file_name[-2]+'/'+file_name[-1])
+
+      
+    print(len(local_image_files), len(labels))
+    feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
+  
+  return(feature_list)
