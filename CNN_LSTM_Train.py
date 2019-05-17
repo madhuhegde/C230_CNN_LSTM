@@ -3,7 +3,7 @@ import os
 import time
 from CNN_LSTM_load_data import load_cholec_data, generator
 from CNN_LSTM_split_data import split_cholec_data, train_test_data_split
-
+from LossHistory import LossHistory
 
 from keras.applications.vgg16 import VGG16
 from keras.models import Model
@@ -15,7 +15,7 @@ from keras.optimizers import Nadam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "data/"
 image_dir = base_dir+"images/"
 label_dir = base_dir+"labels/"
 
@@ -97,13 +97,15 @@ print ("Loading train data")
 train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
+history = LossHistory()
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/BATCH_SIZE), 
-            epochs=2, verbose=1)
+            epochs=nb_epochs, verbose=1, callbacks=[history])
 
-
-
+logfile = open('logs/losses.txt', 'wt')
+logfile.write(history.losses)
+logfile.close()
 
 
