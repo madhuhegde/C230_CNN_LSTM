@@ -10,7 +10,7 @@ label_dir = base_dir+"labels/"
 import pdb
 video_files = glob.glob(video_dir+"*.mp4")
 
-num_videos = 25 
+num_videos = 10 
 
 
 def extract_images(video,output):

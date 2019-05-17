@@ -3,7 +3,7 @@ import os
 import time
 from CNN_LSTM_load_data import load_cholec_data, generator
 from CNN_LSTM_split_data import split_cholec_data, train_test_data_split
-
+from LossHistory import LossHistory
 
 from keras.applications.vgg16 import VGG16
 from keras.models import Model
@@ -80,7 +80,7 @@ model.compile(loss="categorical_crossentropy",
 
 #training parameters
 BATCH_SIZE = 8 # increase if your system can cope with more data
-nb_epochs = 2 # I once achieved 50% accuracy with 400 epochs. Feel free to change
+nb_epochs = 100 # I once achieved 50% accuracy with 400 epochs. Feel free to change
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -93,13 +93,15 @@ print ("Loading train data")
 train_generator = generator(train_samples, batch_size=BATCH_SIZE)
 validation_generator = generator(validation_samples, batch_size=BATCH_SIZE)
 
+history = LossHistory()
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/BATCH_SIZE), 
-            epochs=2, verbose=1)
+            epochs=nb_epochs, verbose=1, callbacks=[history])
 
-
-
+logfile = open('logs/losses.txt', 'wt')
+logfile.write(history.losses)
+logfile.close()
 
 

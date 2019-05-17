@@ -83,7 +83,7 @@ def generator(samples, batch_size=8):
             for batch_sample in batch_samples:
                 image_file = batch_sample[0]
                 #phase = batch_sample[1]
-                phase = class_labels[batch_sample[1].split('\t')[1]]
+                phase = class_labels[batch_sample[1].split('\t')[1].strip()]
                 image = cv2.imread(image_file)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
                 #image = (image-128.0)/128.0;
