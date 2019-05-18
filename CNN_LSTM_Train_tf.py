@@ -7,7 +7,7 @@ import tensorflow
 
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.layers import Dense, Input, Dropout
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
@@ -30,15 +30,13 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 15
+frames = 5
 channels = 3
 rows = 224
 columns = 224 
 
 
-
 video = Input(shape=(frames,rows,columns,channels))
-
 cnn_base = VGG16(input_shape=(rows,columns,channels),
                  weights="imagenet",
                  include_top=False)
@@ -51,25 +49,25 @@ cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-5]:
-   layer.trainable = False     
+for layer in cnn.layers[:-8]:
+    layer.trainable = False
 
 
 cnn.summary()
 
-#for layer in cnn.layers:
-#   print(layer.trainable)
+for layer in cnn.layers:
+   print(layer.trainable)
       
 encoded_frames = TimeDistributed(cnn)(video)
 
-#encoded_sequence = LSTM(256)(encoded_frames)
-encoded_sequence = LSTM(80)(encoded_frames)
+encoded_sequence = LSTM(256)(encoded_frames)
+#encoded_sequence = LSTM(80)(encoded_frames)
 
-#hidden_layer = Dense(output_dim=1024, activation="relu")(encoded_sequence)
-hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
+hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
+#hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
 
-outputs = Dense(units=num_classes, activation="softmax")(hidden_layer)
-
+dropout_layer = Dropout(0.5)(hidden_layer)
+outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 model = Model([video], outputs)
 
 model.summary()
