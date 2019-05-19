@@ -12,6 +12,7 @@ from keras.layers.pooling import GlobalAveragePooling2D
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import TimeDistributed
 from keras.optimizers import Nadam
+from keras.utils import plot_model
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -65,7 +66,7 @@ model = Model([video], outputs)
 
 model.summary()
 
-optimizer = Nadam(lr=0.01,
+optimizer = Nadam(lr=0.001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -97,12 +98,13 @@ print ("Loading train data")
 train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
-history = LossHistory()
-model.fit_generator(train_generator, 
+lhistory = LossHistory()
+history = model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/BATCH_SIZE), 
-            epochs=nb_epochs, verbose=1, callbacks=[history])
+            epochs=nb_epochs, verbose=1, callbacks=[lhistory])
+plot_model(model, to_file='logs/model.png', show_shapes=True)
 
 logfile = open('logs/losses.txt', 'wt')
 logfile.write('\n'.join(str(l) for l in history.losses))
