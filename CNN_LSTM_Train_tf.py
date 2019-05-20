@@ -2,12 +2,12 @@ import numpy as np
 import os
 import time
 from CNN_LSTM_load_data import  generator_train, generator_test
-from CNN_LSTM_split_data import generate_feature_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 import tensorflow
 
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.layers import Dense, Input, Dropout
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
@@ -15,7 +15,7 @@ from tensorflow.keras.optimizers import Nadam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -30,7 +30,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 15
+frames = 5
 channels = 3
 rows = 224
 columns = 224 
@@ -57,24 +57,25 @@ for layer in cnn.layers[:-5]:
 
 cnn.summary()
 
-#for layer in cnn.layers:
-#   print(layer.trainable)
+for layer in cnn.layers:
+   print(layer.trainable)
       
 encoded_frames = TimeDistributed(cnn)(video)
 
-#encoded_sequence = LSTM(256)(encoded_frames)
-encoded_sequence = LSTM(80)(encoded_frames)
+encoded_sequence = LSTM(1024)(encoded_frames)
+#encoded_sequence = LSTM(80)(encoded_frames)
 
-#hidden_layer = Dense(output_dim=1024, activation="relu")(encoded_sequence)
-hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
+hidden_layer = Dense(units=1024, activation="tanh")(encoded_sequence)
+#hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
 
-outputs = Dense(units=num_classes, activation="softmax")(hidden_layer)
+dropout_layer = Dropout(0.5)(hidden_layer)
+outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 
 model = Model([video], outputs)
 
 model.summary()
 
-optimizer = Nadam(lr=0.002,
+optimizer = Nadam(lr=0.0005,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -92,16 +93,22 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 16 # increase if your system can cope with more data
-nb_epochs = 2 # 
+BATCH_SIZE = 32 # increase if your system can cope with more data
+nb_epochs = 10 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
 
 
-train_samples  = generate_feature_list(train_image_dir, train_label_dir)
-validation_samples = generate_feature_list(test_image_dir, test_label_dir)
-
+train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
+validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+#validation_samples = validation_samples[0:60*32*5]
+train_len = int(len(train_samples)/(BATCH_SIZE*frames))
+train_len = (train_len)*BATCH_SIZE*frames
+train_samples = train_samples[0:train_len]
+validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+validation_len = (validation_len-2)*BATCH_SIZE*frames
+validation_samples = validation_samples[0:validation_len]
 print ("Loading train data")
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
