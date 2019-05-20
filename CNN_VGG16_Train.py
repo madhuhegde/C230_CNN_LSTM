@@ -51,7 +51,7 @@ x = Dense(num_classes, activation='softmax', name='predictions')(x)
 #Create your own model 
 model = Model(inputs=cnn_base.input, outputs=x)
 
-for layer in cnn_base.layers[:-10]:
+for layer in cnn_base.layers[:-13]:
     layer.trainable = False
     
 for layer in cnn_base.layers:  
@@ -61,7 +61,7 @@ for layer in cnn_base.layers:
 model.summary()
 
 
-optimizer = Nadam(lr=0.002,
+optimizer = Nadam(lr=0.0001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -74,8 +74,8 @@ model.compile(loss="categorical_crossentropy",
 
 
 #training parameters
-BATCH_SIZE = 4 # increase if your system can cope with more data
-nb_epochs = 3 # 
+BATCH_SIZE = 32 # increase if your system can cope with more data
+nb_epochs = 10 # 
 frames = 1
 
 
