@@ -39,26 +39,22 @@ columns = 224
 cnn_base = VGG16(input_shape=(rows,columns,channels), weights='imagenet', include_top=False)
 #cnn_base.summary()
 
-#Create your own input format (here 3x200x200)
-input_image = Input(shape=(rows, columns, channels),name = 'image_input')
-
-#Use the generated model 
-cnn = cnn_base(input_image)
-
 #Add the fully-connected layers 
-x = Flatten(name='flatten')(cnn)
+x = cnn_base.output
+x = Flatten(name='flatten')(x)
 x = Dense(4096, activation='relu', name='fc1')(x)
 x = Dropout(0.5)(x)
-x = Dense(4096, activation='relu', name='fc2')(x)
+x = Dense(1024, activation='relu', name='fc2')(x)
 x = Dropout(0.2)(x)
 x = Dense(num_classes, activation='softmax', name='predictions')(x)
 
 #Create your own model 
-model = Model(inputs=input_image, outputs=x)
-for layer in model.layers[:-11]:
-    layer.trainable = False
+model = Model(inputs=cnn_base.input, outputs=x)
 
-for layer in model.layers:
+for layer in cnn_base.layers[:-10]:
+    layer.trainable = False
+    
+for layer in cnn_base.layers:  
     print(layer.trainable)
 
 #In the summary, weights and layers from VGG part will be hidden, but they will be fit during the training
