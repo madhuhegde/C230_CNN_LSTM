@@ -1,8 +1,9 @@
 import numpy as np
 import os
 import time
+import random
 from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
-from CNN_LSTM_split_data import generate_feature_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 import tensorflow
 
 from tensorflow.keras.applications.vgg16 import VGG16
@@ -15,7 +16,7 @@ from tensorflow.keras.optimizers import Nadam, Adam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -54,6 +55,11 @@ x = Dense(num_classes, activation='softmax', name='predictions')(x)
 
 #Create your own model 
 model = Model(inputs=input_image, outputs=x)
+for layer in model.layers[:-11]:
+    layer.trainable = False
+
+for layer in model.layers:
+    print(layer.trainable)
 
 #In the summary, weights and layers from VGG part will be hidden, but they will be fit during the training
 model.summary()
@@ -77,10 +83,15 @@ nb_epochs = 3 #
 frames = 1
 
 
-train_samples  = generate_feature_list(train_image_dir, train_label_dir)
-validation_samples = generate_feature_list(test_image_dir, test_label_dir)
-train_samples = train_samples[0:256]
-validation_samples = validation_samples[0:64]
+train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
+validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+random.shuffle(train_samples)
+train_len = int(len(train_samples)/(BATCH_SIZE*frames))
+train_len = (train_len-2)*BATCH_SIZE*frames
+train_samples = train_samples[0:train_len]
+validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+validation_len = (validation_len-2)*BATCH_SIZE*frames
+validation_samples = validation_samples[0:validation_len]
 
 print ("Start Train and Test data generators")
 # load training data

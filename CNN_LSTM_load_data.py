@@ -61,7 +61,6 @@ def generator_train(samples, batch_size=32, frames_per_clip=4):
             
 def generator_test(samples, batch_size=32, frames_per_clip=4):
     num_samples = len(samples)
-    
     while 1: # Loop forever so the generator never terminates
         
         for offset in range(0, num_samples, batch_size*frames_per_clip):
@@ -104,7 +103,6 @@ def generator_test(samples, batch_size=32, frames_per_clip=4):
             
 def generator_CNN_train(samples, batch_size=32, frames_per_clip=4):
     num_samples = len(samples)
-    
     while 1: # Loop forever so the generator never terminates
         
         for offset in range(0, num_samples, batch_size):
