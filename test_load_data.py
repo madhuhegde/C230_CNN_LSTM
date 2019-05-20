@@ -7,7 +7,7 @@ import os
 import subprocess
 import glob
 import numpy as np
-from CNN_LSTM_split_data import  generate_feature_list
+from CNN_LSTM_split_data import  generate_feature_train_list, generate_feature_test_list
 from CNN_LSTM_load_data import  generator_train, generator_test
 
 base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
@@ -20,10 +20,10 @@ train_label_dir = base_label_dir + "train/"
 
 
 #[train_list, test_list]  = train_test_data_split(image_dir, label_dir, 0.2)
-train_list = generate_feature_list(train_image_dir, train_label_dir)
+train_list = generate_feature_train_list(train_image_dir, train_label_dir)
 print(len(train_list))
 
-test_list = generate_feature_list(test_image_dir, test_label_dir)
+test_list = generate_feature_test_list(train_image_dir, train_label_dir)
 print(len(test_list))
 
 
@@ -35,7 +35,7 @@ train_generator = generator_train(train_list, 4, 4)
 
 test_generator = generator_test(test_list, 4, 4)
 
-for i in range(int(len(test_list)/16)):
+for i in range(int(len(test_list[0:256])/16)):
  [X, y] = test_generator.__next__()
 
 print(X.shape, y.shape)
