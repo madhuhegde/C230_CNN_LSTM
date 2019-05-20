@@ -15,40 +15,6 @@ test_image_dir = base_image_dir+"test/"
 class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutting\n":2, 
            "GallbladderDissection\n":3, "GallbladderPackaging\n":4, "CleaningCoagulation\n":5, "GallbladderRetraction\n":6}
 
-
-
-
-def generator_old(samples, batch_size=32, frames_per_clip=4):
-    num_samples = len(samples)
-    
-    while 1: # Loop forever so the generator never terminates
-        random.shuffle(samples)
-        for offset in range(0, num_samples, batch_size):
-            batch_samples = samples[offset:offset+batch_size]
-
-            images = []
-            phases = []
-            for batch_sample in batch_samples:
-                image_file = image_dir+batch_sample[0]
-                #phase = batch_sample[1]
-                phase = class_labels[batch_sample[1].split('\t')[1]]
-                
-                image = cv2.imread(image_file)
-                image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
-                #image = (image-128.0)/128.0;
-                image = image/255.0
-                
-                images.append([image]*frames_per_clip)
-                phases.append(phase)
-
-            
-            # trim image to only see section with road
-            X_batch = np.array(images)
-            classes_one_hot = np.zeros((len(phases), len(class_labels)))
-            classes_one_hot[np.arange(len(phases)), phases] = 1  
-            y_batch = classes_one_hot
-            yield (X_batch, y_batch)    
-            
               
 def generator_train(samples, batch_size=32, frames_per_clip=4):
     num_samples = len(samples)
@@ -58,7 +24,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4):
         for offset in range(0, num_samples, batch_size*frames_per_clip):
             batch_samples = samples[offset:offset+batch_size*frames_per_clip]
             
-            #print(offset, len(batch_samples))
+            print('/t', offset, len(batch_samples))
 
             images = []
             phases = []
@@ -78,18 +44,14 @@ def generator_train(samples, batch_size=32, frames_per_clip=4):
                 
                 image = cv2.imread(image_file)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+                if(batch_sample[2]):
+                  image = cv2.flip(image, 1)
                 #image = (image-128.0)/128.0;
-                image = image/255.0
-               
+                image = image/255.0  
                 consecutive_images.append(image)
-               
-                
+                     
               images.append(consecutive_images)
-               
-
-            
-            # trim image to only see section with road
-        
+              
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
             classes_one_hot[np.arange(len(phases)), phases] = 1  
@@ -124,19 +86,83 @@ def generator_test(samples, batch_size=32, frames_per_clip=4):
                 
                 image = cv2.imread(image_file)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+                
                 #image = (image-128.0)/128.0;
                 image = image/255.0
                 consecutive_images.append(image)
-               
-                
+                    
               images.append(consecutive_images)
-               
-
+ 
+            X_batch = np.array(images)
+            classes_one_hot = np.zeros((len(phases), len(class_labels)))
+            classes_one_hot[np.arange(len(phases)), phases] = 1  
+            y_batch = classes_one_hot
+            yield (X_batch, y_batch)   
             
-            # trim image to only see section with road
+            
+            
+            
+def generator_CNN_train(samples, batch_size=32, frames_per_clip=4):
+    num_samples = len(samples)
+    
+    while 1: # Loop forever so the generator never terminates
+        
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            
+            #print('\t', offset, len(batch_samples))
+
+            images = []
+            phases = []
+            for i in range(batch_size):
+              # Read only one label for each frames_per_clip
+              batch_sample = batch_samples[i]
+              
+              phase = class_labels[batch_sample[1].split('\t')[1]]
+              phases.append(phase)
+              image_file = train_image_dir+batch_sample[0]
+              image = cv2.imread(image_file)
+              image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+                
+              #image = (image-128.0)/128.0;
+              image = image/255.0
+              images.append(image)
+               
         
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
             classes_one_hot[np.arange(len(phases)), phases] = 1  
             y_batch = classes_one_hot
+            yield (X_batch, y_batch)   
+            
+            
+def generator_CNN_test(samples, batch_size=32, frames_per_clip=4):
+    num_samples = len(samples)
+    
+    while 1: # Loop forever so the generator never terminates
+        
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+    
+
+            images = []
+            phases = []
+            for i in range(batch_size):
+
+              batch_sample = batch_samples[i]       
+              phase = class_labels[batch_sample[1].split('\t')[1]]
+              phases.append(phase)
+              image_file = test_image_dir+batch_sample[0]
+              image = cv2.imread(image_file)
+              image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+                
+              #image = (image-128.0)/128.0;
+              image = image/255.0
+              images.append(image)
+               
+            X_batch = np.array(images)
+            classes_one_hot = np.zeros((len(phases), len(class_labels)))
+            classes_one_hot[np.arange(len(phases)), phases] = 1  
+            y_batch = classes_one_hot
             yield (X_batch, y_batch)             
+                      
