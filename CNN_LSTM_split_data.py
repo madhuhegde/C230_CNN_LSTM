@@ -42,19 +42,11 @@ def generate_feature_train_list(image_dir, label_dir):
       file_name = image_file.split('/')
       local_image_files.append(file_name[-2]+'/'+file_name[-1])
 
-    rand_choice = [0,1]
-    if(random.choice(rand_choice)):
-        data_aug_1 = 0
-        data_aug_2 = 1
-    else:
-        data_aug_1 = 0
-        data_aug_2 = 0
-
-    #augmentation disabled
+    
+      
     #print(len(local_image_files), len(labels))
-    feature_list.extend([local_image_files[i], labels[i], data_aug_1] for i in range(len(labels)))
-    #feature_list.extend([local_image_files[i], labels[i], data_aug_2] for i in range(len(labels)))
-  
+    feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
+    
   return(feature_list)
 
 def generate_feature_test_list(image_dir, label_dir):
