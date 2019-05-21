@@ -23,20 +23,25 @@ train_label_dir = base_label_dir + "train/"
 train_list = generate_feature_train_list(train_image_dir, train_label_dir)
 print(len(train_list))
 
-test_list = generate_feature_test_list(train_image_dir, train_label_dir)
+print(train_list[0])
+
+test_list = generate_feature_test_list(test_image_dir, test_label_dir)
 print(len(test_list))
+print(test_list[0])
 
 
-train_generator = generator_train(train_list, 4, 4)
+train_list = train_list[0:128]  
+train_generator = generator_train(train_list, 4, 4, True)
 
 #for i in range(int(len(train_list)/16)):
 #  [X, y] = train_generator.__next__()
 
 
-test_generator = generator_test(test_list, 4, 4)
+#test_generator = generator_test(test_list, 4, 4)
 
-for i in range(int(len(test_list[0:256])/16)):
- [X, y] = test_generator.__next__()
+for i in range(int(len(train_list)/32)):
+ [X, y] = train_generator.__next__()
+ print (np.max(X[0]))
 
 print(X.shape, y.shape)
 
