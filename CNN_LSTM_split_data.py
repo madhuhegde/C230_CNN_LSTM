@@ -47,13 +47,13 @@ def generate_feature_train_list(image_dir, label_dir):
         data_aug_1 = 0
         data_aug_2 = 1
     else:
-        data_aug_1 = 1
+        data_aug_1 = 0
         data_aug_2 = 0
 
-      
+    #augmentation disabled
     #print(len(local_image_files), len(labels))
     feature_list.extend([local_image_files[i], labels[i], data_aug_1] for i in range(len(labels)))
-    feature_list.extend([local_image_files[i], labels[i], data_aug_2] for i in range(len(labels)))
+    #feature_list.extend([local_image_files[i], labels[i], data_aug_2] for i in range(len(labels)))
   
   return(feature_list)
 
@@ -66,20 +66,20 @@ def generate_feature_test_list(image_dir, label_dir):
   
 
   for label_file in label_files:
-    print(label_file)  
+    #print(label_file)  
     with open(label_file) as handle:
       #Read extra line that says Frames Phases
       handle.readline()
       labels = handle.readlines()
       
-    print(len(labels))
+    #print(len(labels))
     label_file_name = label_file.split('/')[-1]
       
     image_folder = image_dir+label_file_name.replace('-label.txt', '')
-    print(image_folder)
+    #print(image_folder)
     image_files = glob.glob(image_folder+"/video*.jpg")
     image_files.sort(key=os.path.getmtime)
-    print(len(image_files))
+    #print(len(image_files))
     local_image_files = list()
     for image_file in image_files:
       file_name = image_file.split('/')
