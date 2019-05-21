@@ -25,7 +25,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
     shuffle_order = np.arange(num_frames)
     if(shuffle):
       random.shuffle(shuffle_order)
-    print(shuffle_order)
+    #print(shuffle_order)
     
     while 1: # Loop forever so the generator never terminates
         

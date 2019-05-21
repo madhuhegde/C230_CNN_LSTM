@@ -30,7 +30,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 5
+frames = 15
 channels = 3
 rows = 224
 columns = 224 
@@ -50,7 +50,7 @@ cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-4]:
+for layer in cnn.layers[:-7]:
     layer.trainable = False
 
 
@@ -61,19 +61,19 @@ for layer in cnn.layers:
       
 encoded_frames = TimeDistributed(cnn)(video)
 
-encoded_sequence = LSTM(1024)(encoded_frames)
+encoded_sequence = LSTM(512)(encoded_frames)
 #encoded_sequence = LSTM(80)(encoded_frames)
 
-hidden_layer = Dense(units=1024, activation="tanh")(encoded_sequence)
+hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
 
-dropout_layer = Dropout(0.5)(hidden_layer)
+dropout_layer = Dropout(rate=0.2)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 model = Model([video], outputs)
 
 model.summary()
 
-optimizer = Nadam(lr=0.0005,
+optimizer = Nadam(lr=0.00001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
