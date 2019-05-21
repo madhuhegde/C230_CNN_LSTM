@@ -50,7 +50,7 @@ cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-7]:
+for layer in cnn.layers[:-10]:
     layer.trainable = False
 
 
@@ -67,7 +67,7 @@ encoded_sequence = LSTM(512)(encoded_frames)
 hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=80, activation="relu")(encoded_sequence)
 
-dropout_layer = Dropout(rate=0.2)(hidden_layer)
+dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 model = Model([video], outputs)
 
@@ -91,7 +91,7 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 32 # increase if your system can cope with more data
+BATCH_SIZE = 8 # increase if your system can cope with more data
 nb_epochs = 10 # 
 
 
@@ -107,10 +107,10 @@ train_samples = train_samples[0:train_len]
 validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
 validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
-print ("Loading train data")
+print (train_len, validation_len)
 # load training data
-train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
-validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
+train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
+validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
 
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
