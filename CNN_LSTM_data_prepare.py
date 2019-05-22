@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
+base_dir = "data/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"

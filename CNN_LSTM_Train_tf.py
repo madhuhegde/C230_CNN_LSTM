@@ -7,6 +7,8 @@ import json, pickle
 #matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 
+from LossHistory import LossHistory
+from keras.utils import plot_model
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Dropout
@@ -14,7 +16,7 @@ from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 
 
 from CNN_LSTM_load_data import  generator_train, generator_test
@@ -22,9 +24,10 @@ from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_te
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
-model_save_dir = "/home/madhu_hegde/cs230/data/"
-history_dir = "/home/madhu_hegde/cs230/data/"
+base_dir = "data/"
+model_save_dir = "data/model"
+log_dir="logs/"
+history_dir = "data/history"
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -134,7 +137,8 @@ print (train_len, validation_len)
 #define callback functions
 callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
              ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             save_best_only=True)]
+             save_best_only=True),
+             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
@@ -147,6 +151,11 @@ history = model.fit_generator(train_generator,
             #callbacks = [history],
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
+
+plot_model(model, to_file='./logs/model.png', show_shapes=True)
+logfile = open('./logs/losses.txt', 'wt')
+logfile.write('\n'.join(str(l) for l in history.history['loss']))
+logfile.close()
                         
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
 print(history.history['loss'])
