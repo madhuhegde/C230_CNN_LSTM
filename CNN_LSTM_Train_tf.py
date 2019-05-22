@@ -44,7 +44,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 2    #Number of frames over which LSTM prediction happens
+frames = 15    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
