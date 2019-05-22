@@ -9,8 +9,8 @@ import random
 #image_dir = base_dir+"images/"
 #label_dir = base_dir+"labels/"
 
-class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutting\n":2, 
-           "GallbladderDissection\n":3, "GallbladderPackaging\n":4, "CleaningCoagulation\n":5, "GallbladderRetraction\n":6}
+class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
 
 
@@ -30,7 +30,8 @@ def generate_feature_train_list(image_dir, label_dir):
       labels = handle.readlines()
       
     #print(len(labels))
-    label_file_name = label_file.split('/')[-1]
+    label_file_name = label_file.split('/')[-1].strip()
+    print(label_file_name)
       
     image_folder = image_dir+label_file_name.replace('-label.txt', '')
     #print(image_folder)
@@ -40,11 +41,17 @@ def generate_feature_train_list(image_dir, label_dir):
     local_image_files = list()
     for image_file in image_files:
       file_name = image_file.split('/')
+      print(file_name[-2], file_name[-1])
       local_image_files.append(file_name[-2]+'/'+file_name[-1])
 
     
       
     #print(len(local_image_files), len(labels))
+    print(label_file)
+    print(local_image_files[1])
+    print(labels[1])
+    print(len(labels))
+
     feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
     
   return(feature_list)

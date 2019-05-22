@@ -1,0 +1,7 @@
+data/*
+**/*.jpg
+**/*.mp4
+*.pyc
+*.out
+logs/*
+model/*
