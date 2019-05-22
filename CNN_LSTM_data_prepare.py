@@ -14,7 +14,7 @@ import pdb
 
 
 def extract_images(video,output):
-    command = "ffmpeg -i {video} -r 5  -q:v 2 -f image2 {output}".format(video=video, output=output)
+    command = "ffmpeg -i {video} -r 1  -q:v 2 -f image2 {output}".format(video=video, output=output)
     #command = "echo  {video}  {output}".format(video=video, output=output)
     subprocess.call(command,shell=True)
     return
@@ -68,7 +68,7 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1):
      
      gt_file_name = phase_gt_dir+file_name+"-phase.txt"
      
-     fps = 5   # make sure it matches ffmpeg argument
+     fps = 1   # make sure it matches ffmpeg argument
      gt_list = generate_gt_data(gt_file_name, fps)
      #print(gt_list)
      gt_label_file = label_dir+file_name+"-label.txt"
@@ -83,8 +83,8 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1):
   
   
 if __name__ == "__main__":
-     num_train_videos = 12
-     num_test_videos = 3
+     num_train_videos = 16
+     num_test_videos = 2
      train_video_path = video_base_dir+"train/"
      test_video_path = video_base_dir+"test/"
      train_images_path = image_base_dir+"train/"
