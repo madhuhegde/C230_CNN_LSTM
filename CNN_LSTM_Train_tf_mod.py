@@ -7,8 +7,6 @@ import json, pickle
 #matplotlib.use("TkAgg")
 from matplotlib import pyplot as plt
 
-from LossHistory import LossHistory
-from tensorflow.keras.utils import plot_model
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Dropout
@@ -16,7 +14,7 @@ from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 from CNN_LSTM_load_data import  generator_train, generator_test
@@ -43,7 +41,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 15    #Number of frames over which LSTM prediction happens
+frames = 2    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
@@ -79,7 +77,7 @@ cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-11]:
+for layer in cnn.layers[:-10]:
     layer.trainable = False
 
 
@@ -131,13 +129,12 @@ train_samples = train_samples[0:train_len]
 validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
 validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
-print (train_len, validation_len)
+#print (train_len, validation_len)
 
 #define callback functions
 callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
              ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
              save_best_only=True)]
- #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
@@ -150,11 +147,6 @@ history = model.fit_generator(train_generator,
             #callbacks = [history],
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
-
-#plot_model(model, to_file='./logs/model.png', show_shapes=True)
-logfile = open('./logs/losses.txt', 'wt')
-logfile.write('\n'.join(str(l) for l in history.history['loss']))
-logfile.close()
                         
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
 print(history.history['loss'])
