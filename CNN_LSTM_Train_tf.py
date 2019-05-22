@@ -117,7 +117,7 @@ model.compile(loss="categorical_crossentropy",
 
 #training parameters
 BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 2 # 
+nb_epochs = 10 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -135,13 +135,10 @@ validation_samples = validation_samples[0:validation_len]
 #print (train_len, validation_len)
 
 #define callback functions
-lhistory = LossHistory()
-tbCallBack = TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)
 callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
              ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
              save_best_only=True),
-             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True),
-             lhistory]
+             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
@@ -154,9 +151,10 @@ history = model.fit_generator(train_generator,
             #callbacks = [history],
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
+
 plot_model(model, to_file='./logs/model.png', show_shapes=True)
 logfile = open('./logs/losses.txt', 'wt')
-logfile.write('\n'.join(str(l) for l in history.losses))
+logfile.write('\n'.join(str(l) for l in history.history['loss']))
 logfile.close()
                         
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])

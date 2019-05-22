@@ -31,7 +31,6 @@ def generate_feature_train_list(image_dir, label_dir):
       
     #print(len(labels))
     label_file_name = label_file.split('/')[-1].strip()
-    print(label_file_name)
       
     image_folder = image_dir+label_file_name.replace('-label.txt', '')
     #print(image_folder)
@@ -41,17 +40,11 @@ def generate_feature_train_list(image_dir, label_dir):
     local_image_files = list()
     for image_file in image_files:
       file_name = image_file.split('/')
-      print(file_name[-2], file_name[-1])
       local_image_files.append(file_name[-2]+'/'+file_name[-1])
 
     
       
     #print(len(local_image_files), len(labels))
-    print(label_file)
-    print(local_image_files[1])
-    print(labels[1])
-    print(len(labels))
-
     feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
     
   return(feature_list)
