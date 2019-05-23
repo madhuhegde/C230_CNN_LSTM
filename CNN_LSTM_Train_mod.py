@@ -8,7 +8,6 @@ import json, pickle
 from matplotlib import pyplot as plt
 
 from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Dropout
 from tensorflow.keras.layers import GlobalAveragePooling2D
@@ -42,7 +41,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
+frames = 15    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
@@ -78,7 +77,7 @@ cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[0:-11]:
+for layer in cnn.layers[:-11]:
     layer.trainable = False
 
 
@@ -89,14 +88,14 @@ for layer in cnn.layers:
 
 #Build LSTM network
 encoded_frames = TimeDistributed(cnn)(video)
-first_LSTM_layer = LSTM(512, return_sequences=True, name='lstm1')(encoded_frames)
-dropout_layer_1 = Dropout(rate=0.3) (first_LSTM_layer)
-# RELU or tanh?
-#hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
-second_LSTM_layer = LSTM(512, name='lstm2')(dropout_layer_1)
+encoded_sequence = LSTM(512)(encoded_frames)
 
-dropout_layer_2 = Dropout(rate=0.3)(second_LSTM_layer)
-outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
+# RELU or tanh?
+hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
+#hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
+
+dropout_layer = Dropout(rate=0.5)(hidden_layer)
+outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 model = Model([video], outputs)
 
 model.summary()
@@ -115,7 +114,7 @@ model.compile(loss="categorical_crossentropy",
 
 #training parameters
 BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 10 # 
+nb_epochs = 20 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -130,10 +129,10 @@ train_samples = train_samples[0:train_len]
 validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
 validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
-#print (train_len, validation_len)
+print (train_len, validation_len)
 
 #define callback functions
-callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
              ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
              save_best_only=True)]
 
