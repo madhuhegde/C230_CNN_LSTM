@@ -20,14 +20,12 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 
               
 def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
-    
-    num_frames = int(len(samples)/frames_per_clip)
-    shuffle_order = np.arange(num_frames)
-    if(shuffle):
-      random.shuffle(shuffle_order)
-    #print(shuffle_order)
-    
+   
     while 1: # Loop forever so the generator never terminates
+        num_frames = int(len(samples)/frames_per_clip)
+        shuffle_order = np.arange(num_frames)
+        if(shuffle):
+          random.shuffle(shuffle_order)
         
         frames_count = 0
         for offset in range(0, num_frames, batch_size):
@@ -63,9 +61,6 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
               images.append(consecutive_images)
               frames_count = frames_count +1
                
-
-            
-            # trim image to only see section with road
         
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
@@ -74,7 +69,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
             yield (X_batch, y_batch)   
             
             
-def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=True):
+def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=False):
     num_samples = len(samples)
     
     while 1: # Loop forever so the generator never terminates
@@ -108,9 +103,6 @@ def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=True):
                 
               images.append(consecutive_images)
                
-
-            
-            # trim image to only see section with road
         
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))

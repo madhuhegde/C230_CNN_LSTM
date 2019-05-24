@@ -5,6 +5,7 @@ import tensorflow
 import matplotlib
 import json, pickle
 #matplotlib.use("TkAgg")
+import pdb
 from matplotlib import pyplot as plt
 
 from LossHistory import LossHistory
