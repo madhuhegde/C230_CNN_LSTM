@@ -48,6 +48,8 @@ frames = 25    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
+BATCH_SIZE = 8
+nb_epochs = 14
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -98,11 +100,11 @@ cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-11]:
+for layer in cnn_model.layers[:-11]:
     layer.trainable = False
 
 
-cnn.summary()
+cnn_model.summary()
 
 for layer in cnn_model.layers:
    print(layer.trainable)
@@ -135,12 +137,6 @@ lstm_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-#training parameters
-BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 10 # 
-
-
-#generate indices for train_array an test_array with train_test_split_ratio = 0.
 
 
 train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
@@ -156,9 +152,9 @@ print (train_len, validation_len)
 saveCNN_Model = CNN_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5")
 
 #define callback functions
-callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
-             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             #save_best_only=True),
+callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+             ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             save_best_only=True),
              saveCNN_Model]
  #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
