@@ -98,11 +98,11 @@ cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[:-11]:
+for layer in cnn_model.layers[:-11]:
     layer.trainable = False
 
 
-cnn.summary()
+cnn_model.summary()
 
 for layer in cnn_model.layers:
    print(layer.trainable)
