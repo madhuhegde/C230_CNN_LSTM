@@ -5,8 +5,11 @@ import tensorflow
 import matplotlib
 import json, pickle
 #matplotlib.use("TkAgg")
+import pdb
 from matplotlib import pyplot as plt
 
+
+from tensorflow.keras.utils import plot_model
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.models import Model
@@ -47,6 +50,10 @@ channels = 3  #RGB
 rows = 224    
 columns = 224 
 
+#training parameters
+BATCH_SIZE = 4 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
+nb_epochs = 4 # 
+
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -62,6 +69,24 @@ class History(tensorflow.keras.callbacks.Callback):
     def on_epoch_end(self, batch, logs={}):    
         self.val_acc.append(logs.get('val_categorical_accuracy'))
         self.val_loss.append(logs.get('val_loss'))
+        
+# Implement ModelCheckPoint callback function to save CNN model
+class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
+
+    def __init__(self, model, filename):
+        self.filename = filename
+        self.cnn_model = model
+
+    def on_train_begin(self, logs={}):
+        self.max_val_acc = 0
+        
+ 
+    def on_epoch_end(self, batch, logs={}):    
+        val_acc = logs.get('val_categorical_accuracy')
+        if(val_acc > self.max_val_acc):
+           self.max_val_acc = val_acc
+           self.cnn_model.save(self.filename)     
+          
 
 #Use pretrained VGG16 
 video = Input(shape=(frames,rows,columns,channels))
@@ -73,18 +98,18 @@ cnn_base = VGG16(input_shape=(rows,columns,channels),
 
 cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
-cnn = Model(inputs=cnn_base.input, outputs=cnn_out)
+cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn.layers[0:-11]:
+for layer in cnn_model.layers[0:-11]:
     layer.trainable = False
 
 
-cnn.summary()
+cnn_model.summary()
 
-for layer in cnn.layers:
+for layer in cnn_model.layers:
    print(layer.trainable)
 
 #Build LSTM network
@@ -97,9 +122,9 @@ second_LSTM_layer = LSTM(512, name='lstm2')(dropout_layer_1)
 
 dropout_layer_2 = Dropout(rate=0.3)(second_LSTM_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
-model = Model([video], outputs)
+lstm_model = Model(video, outputs)
 
-model.summary()
+lstm_model.summary()
 
 #Similar to Adam
 optimizer = Nadam(lr=0.00001,
@@ -109,13 +134,10 @@ optimizer = Nadam(lr=0.00001,
                   schedule_decay=0.004)
 
 #softmax crossentropy
-model.compile(loss="categorical_crossentropy",
+lstm_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-#training parameters
-BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 10 # 
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -132,16 +154,19 @@ validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
 #print (train_len, validation_len)
 
+saveCNN_Model = CNN_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5")
+
 #define callback functions
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
              ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             save_best_only=True)]
+             save_best_only=True),
+             saveCNN_Model]
 
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
 validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
 
-history = model.fit_generator(train_generator, 
+history = lstm_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
@@ -163,7 +188,7 @@ with open(history_dir+'model_history', 'wb') as file_pi:
 #plt.show()
 
 #save model and clear session
-del model
+del lstm_model
 tensorflow.keras.backend.clear_session()
 
 

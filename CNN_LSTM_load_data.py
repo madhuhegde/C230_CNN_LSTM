@@ -12,22 +12,20 @@ test_image_dir = base_image_dir+"test/"
 #label_dir = base_dir+"labels/"
 
 
-class_labels = {"Preparation\n":0, "CalotTriangleDissection\n":1, "ClippingCutting\n":2, 
-           "GallbladderDissection\n":3, "GallbladderPackaging\n":4, "CleaningCoagulation\n":5, "GallbladderRetraction\n":6}
+class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
 
 
 
               
 def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
-    
-    num_frames = int(len(samples)/frames_per_clip)
-    shuffle_order = np.arange(num_frames)
-    if(shuffle):
-      random.shuffle(shuffle_order)
-    #print(shuffle_order)
-    
+   
     while 1: # Loop forever so the generator never terminates
+        num_frames = int(len(samples)/frames_per_clip)
+        shuffle_order = np.arange(num_frames)
+        if(shuffle):
+          random.shuffle(shuffle_order)
         
         frames_count = 0
         for offset in range(0, num_frames, batch_size):
@@ -41,7 +39,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
               # Read only one label for each frames_per_clip
               batch_sample = samples[shuffle_order[frames_count]*frames_per_clip]
               
-              phase = class_labels[batch_sample[1].split('\t')[1]]
+              phase = class_labels[batch_sample[1].split('\t')[1].strip()]
               phases.append(phase)
               
               consecutive_images = []
@@ -63,9 +61,6 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
               images.append(consecutive_images)
               frames_count = frames_count +1
                
-
-            
-            # trim image to only see section with road
         
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
@@ -74,7 +69,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
             yield (X_batch, y_batch)   
             
             
-def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=True):
+def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=False):
     num_samples = len(samples)
     
     while 1: # Loop forever so the generator never terminates
@@ -89,7 +84,7 @@ def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=True):
               # Read only one label for each frames_per_clip
               batch_sample = batch_samples[frames_per_clip*i]
               
-              phase = class_labels[batch_sample[1].split('\t')[1]]
+              phase = class_labels[batch_sample[1].split('\t')[1].strip()]
               phases.append(phase)
               
               consecutive_images = []
@@ -108,9 +103,6 @@ def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=True):
                 
               images.append(consecutive_images)
                
-
-            
-            # trim image to only see section with road
         
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
