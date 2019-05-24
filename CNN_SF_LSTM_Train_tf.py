@@ -91,6 +91,10 @@ class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 #Define Input with batch_shape to train stateful LSTM  
 video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
+prev_lstm_model = load_model(model_save_dir+'best_model.h5')
+lstm_weights = prev_lstm_model.get_weights()
+del prev_lstm_model
+
 #Load weights of CNN model
 cnn_model = load_model(model_save_dir+'cnn_model.h5')
 
@@ -115,6 +119,8 @@ outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 lstm_model = Model(video, outputs)
 
 lstm_model.summary()
+
+lstm_model.set_weights(lstm_weights)
 
 
 #Similar to Adam
