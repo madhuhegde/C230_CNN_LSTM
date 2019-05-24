@@ -51,7 +51,7 @@ columns = 224
 
 #training parameters
 BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 10 # 
+nb_epochs = 2 # 
 
 
 # Define callback function if detailed log required
@@ -93,6 +93,7 @@ video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
 prev_lstm_model = load_model(model_save_dir+'best_model.h5')
 lstm_weights = prev_lstm_model.get_weights()
+prev_lstm_model.summary()
 del prev_lstm_model
 
 #Load weights of CNN model
@@ -103,7 +104,7 @@ for layer in cnn_model.layers:
 
 
 
-cnn_model.summary()
+#cnn_model.summary()
 
 #pdb.set_trace()
 
