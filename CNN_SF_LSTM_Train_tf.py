@@ -25,9 +25,11 @@ from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_te
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
-model_save_dir = "/home/madhu_hegde/cs230/data/"
-history_dir = "/home/madhu_hegde/cs230/data/"
+config = json.load(open('config/config.json'))
+base_dir = config['base_dir']
+model_save_dir = config["model_save_dir"]
+history_dir = config["history_dir"]
+
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -71,11 +73,13 @@ class History(tensorflow.keras.callbacks.Callback):
         self.val_loss.append(logs.get('val_loss'))
         
 # Implement ModelCheckPoint callback function to save CNN model
-class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
+class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 
-    def __init__(self, model, filename):
-        self.filename = filename
-        self.cnn_model = model
+    def __init__(self,cnn_model, cnn_filename, lstm_model, lstm_filename):
+        self.cnn_filename = cnn_filename
+        self.cnn_model = cnn_model
+        self.lstm_filename = lstm_filename
+        self.lstm_model = lstm_model
 
     def on_train_begin(self, logs={}):
         self.max_val_acc = 0
@@ -85,20 +89,30 @@ class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
-           self.cnn_model.save(self.filename)     
+           self.cnn_model.save(self.cnn_filename) 
+           self.lstm_model.save(self.lstm_filename)
           
 
 #Define Input with batch_shape to train stateful LSTM  
 video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
-prev_lstm_model = load_model(model_save_dir+'best_model.h5')
-lstm_weights = prev_lstm_model.get_weights()
-prev_lstm_model.summary()
+#load lstm_model with shuffled data
+prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+lstm_weights = list()
+
+#load pretrained weights
+for layer in prev_lstm_model.layers:
+    weights = layer.get_weights()
+    lstm_weights.append(weights)
+
+# print summary and clear model    
+prev_lstm_model.summary
 del prev_lstm_model
 
-#Load weights of CNN model
+#load pre-trained cnn model
 cnn_model = load_model(model_save_dir+'cnn_model.h5')
 
+#freeze cnn weights for stateful LSTM
 for layer in cnn_model.layers:
    layer.trainable = False
 
@@ -119,9 +133,8 @@ dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 lstm_model = Model(video, outputs)
 
-lstm_model.summary()
-
-lstm_model.set_weights(lstm_weights)
+for i in range(len(lstm_model.layers)):
+    lstm_model.layers[i].set_weights(lstm_weights[i])
 
 
 #Similar to Adam
@@ -151,11 +164,14 @@ validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
 print (train_len, validation_len)
 
+saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
+                                    lstm_model, model_save_dir+"lstm_model.h5")
+
 #define callback functions
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-             ModelCheckpoint(filepath=model_save_dir+'lstm_model.h5', monitor='val_loss',
-             save_best_only=True)]
-             #saveCNN_Model]
+             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             #save_best_only=True),
+             saveCNN_Model]
  #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
 # load training data
@@ -167,7 +183,7 @@ history = lstm_model.fit_generator(train_generator,
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
             #callbacks = [history],
-            callbacks = callbacks,
+            #callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
 #plot_model(model, to_file='./logs/model.png', show_shapes=True)
