@@ -18,7 +18,7 @@ from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-
+from tensorflow.keras.utils import multi_gpu_model
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
@@ -70,11 +70,13 @@ class History(tensorflow.keras.callbacks.Callback):
         self.val_loss.append(logs.get('val_loss'))
         
 # Implement ModelCheckPoint callback function to save CNN model
-class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
+class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 
-    def __init__(self, model, filename):
-        self.filename = filename
-        self.cnn_model = model
+    def __init__(self,cnn_model, cnn_filename, lstm_model, lstm_filename):
+        self.cnn_filename = cnn_filename
+        self.cnn_model = cnn_model
+        self.lstm_filename = lstm_filename
+        self.lstm_model = lstm_model
 
     def on_train_begin(self, logs={}):
         self.max_val_acc = 0
@@ -84,7 +86,8 @@ class CNN_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
-           self.cnn_model.save(self.filename)     
+           self.cnn_model.save(self.cnn_filename) 
+           self.lstm_model.save(self.lstm_filename)
           
 
 #Use pretrained VGG16 
@@ -102,7 +105,7 @@ cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 #cnn.trainable = True
 
 #Use Transfer learning and train only last 4 layers                 
-for layer in cnn_model.layers[:-11]:
+for layer in cnn_model.layers[:-15]:
     layer.trainable = False
 
 
@@ -113,16 +116,16 @@ for layer in cnn_model.layers:
 
 #Build LSTM network
 encoded_frames = TimeDistributed(cnn_model)(video)
-encoded_sequence = LSTM(512, name='lstm1')(encoded_frames)
+encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
-hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
+hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
 
 dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
-lstm_model = Model(video, outputs)
-
+l_model = Model(video, outputs)
+lstm_model = multi_gpu_model(l_model, gpus=2)
 lstm_model.summary()
 #cnn_model.summary() 
 #pdb.set_trace()
@@ -151,12 +154,13 @@ validation_len = (validation_len-2)*BATCH_SIZE*frames
 validation_samples = validation_samples[0:validation_len]
 print (train_len, validation_len)
 
-saveCNN_Model = CNN_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5")
+saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
+                                    l_model, model_save_dir+"lstm_model.h5")
 
 #define callback functions
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-             ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             save_best_only=True),
+             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             #save_best_only=True),
              saveCNN_Model]
  #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
