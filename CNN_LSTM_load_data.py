@@ -5,7 +5,9 @@ import subprocess
 import glob
 import numpy as np
 import random
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
+import json
+config = json.load(open('config/config.json'))
+base_dir = config['base_dir']
 base_image_dir = base_dir +"images/"
 train_image_dir = base_image_dir+"train/"
 test_image_dir = base_image_dir+"test/"

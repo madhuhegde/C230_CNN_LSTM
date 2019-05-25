@@ -25,9 +25,11 @@ from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_te
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
-model_save_dir = "/home/madhu_hegde/cs230/data/"
-history_dir = "/home/madhu_hegde/cs230/data/"
+config = json.load(open('config/config.json'))
+base_dir = config['base_dir']
+model_save_dir = config["model_save_dir"]
+history_dir = config["history_dir"]
+
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
@@ -48,6 +50,8 @@ frames = 25    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
+BATCH_SIZE = 8
+nb_epochs = 14
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -135,12 +139,6 @@ lstm_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-#training parameters
-BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 10 # 
-
-
-#generate indices for train_array an test_array with train_test_split_ratio = 0.
 
 
 train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
@@ -156,9 +154,9 @@ print (train_len, validation_len)
 saveCNN_Model = CNN_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5")
 
 #define callback functions
-callbacks = [EarlyStopping(monitor='val_loss', patience=5, verbose=2),
-             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             #save_best_only=True),
+callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+             ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             save_best_only=True),
              saveCNN_Model]
  #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
