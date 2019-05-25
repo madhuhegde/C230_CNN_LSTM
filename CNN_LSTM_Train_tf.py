@@ -25,9 +25,11 @@ from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_te
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
-model_save_dir = "/home/madhu_hegde/cs230/data/"
-history_dir = "/home/madhu_hegde/cs230/data/"
+config = json.load(open('config/config.json'))
+base_dir = config['base_dir']
+model_save_dir = config["model_save_dir"]
+history_dir = config["history_dir"]
+
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
