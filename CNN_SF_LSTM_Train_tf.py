@@ -123,10 +123,10 @@ for layer in cnn_model.layers:
 #pdb.set_trace()
 
 encoded_frames = TimeDistributed(cnn_model)(video)
-encoded_sequence = LSTM(512, stateful=True, name='lstm1')(encoded_frames)
+encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
-hidden_layer = Dense(units=512, activation="relu")(encoded_sequence)
+hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
 
 dropout_layer = Dropout(rate=0.5)(hidden_layer)
