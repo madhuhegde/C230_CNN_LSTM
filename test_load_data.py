@@ -10,7 +10,10 @@ import numpy as np
 from CNN_LSTM_split_data import  generate_feature_train_list, generate_feature_test_list
 from CNN_LSTM_load_data import  generator_train, generator_test
 
-base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
+#base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
+import json
+config = json.load(open('config/config.json'))
+base_dir = config['base_dir']
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
 test_image_dir = base_image_dir + "test/"
