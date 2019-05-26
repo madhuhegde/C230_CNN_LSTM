@@ -19,6 +19,7 @@ from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
+from tensorflow.python.client import device_lib
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
@@ -51,7 +52,7 @@ channels = 3  #RGB
 rows = 224    
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 14
+nb_epochs = 10
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -88,7 +89,11 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
            self.max_val_acc = val_acc
            self.cnn_model.save(self.cnn_filename) 
            self.lstm_model.save(self.lstm_filename)
-          
+
+
+def get_available_gpus():
+        local_device_protos = device_lib.list_local_devices()
+        return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
 #Use pretrained VGG16 
 video = Input(shape=(frames,rows,columns,channels))
@@ -104,12 +109,12 @@ cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
 #cnn.trainable = True
 
-#Use Transfer learning and train only last 4 layers                 
-for layer in cnn_model.layers[:-15]:
+#Use Transfer learning and train last 15 layers                 
+for layer in cnn_model.layers[:-18]:
     layer.trainable = False
 
 
-cnn_model.summary()
+#cnn_model.summary()
 
 for layer in cnn_model.layers:
    print(layer.trainable)
@@ -125,7 +130,13 @@ hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
 dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 l_model = Model(video, outputs)
-lstm_model = multi_gpu_model(l_model, gpus=2)
+num_gpus = get_available_gpus()
+if(len(num_gpus)>0):
+    num_gpus = len(num_gpus)
+lstm_model = multi_gpu_model(l_model, 
+                             gpus=num_gpus,
+                             cpu_merge=True,
+                             cpu_relocation=True)
 lstm_model.summary()
 #cnn_model.summary() 
 #pdb.set_trace()
@@ -158,9 +169,11 @@ saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5
                                     l_model, model_save_dir+"lstm_model.h5")
 
 #define callback functions
+history = History()
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
              #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
              #save_best_only=True),
+             history,
              saveCNN_Model]
  #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
@@ -168,7 +181,7 @@ callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
 validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
 
-history = lstm_model.fit_generator(train_generator, 
+lstm_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
@@ -178,16 +191,20 @@ history = lstm_model.fit_generator(train_generator,
 
 #plot_model(model, to_file='./logs/model.png', show_shapes=True)
 logfile = open('./logs/losses.txt', 'wt')
-logfile.write('\n'.join(str(l) for l in history.history['loss']))
+logfile.write('\n'.join(str(l) for l in history.val_loss))
 logfile.close()
                         
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
-print(history.history['loss'])
-
+#print(history.history['loss'])
+history_dict = {}
+history_dict['val_loss'] = history.val_loss
+history_dict['train_loss'] = history.train_loss
+history_dict['train_acc'] = history.train_acc
+history_dict['val_acc'] = history.val_acc
 #dump history
 #json.dump(history.history, open(history_dir+'model_history', 'w'))
 with open(history_dir+'model_history', 'wb') as file_pi:
-        pickle.dump(history.history, file_pi)
+        pickle.dump(history_dict, file_pi)
         
 #print(history.val_acc)
 #plt.title('model accuracy')
