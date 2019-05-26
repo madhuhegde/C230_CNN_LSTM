@@ -149,7 +149,7 @@ if __name__ == "__main__":
                   schedule_decay=0.004)
 
   #softmax crossentropy
-  lstm_model.compile(loss="categorical_crossentropy",
+  gpu_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
