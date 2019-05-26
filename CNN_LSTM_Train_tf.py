@@ -82,7 +82,6 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.max_val_acc = 0
         
- 
     def on_epoch_end(self, batch, logs={}):    
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
@@ -94,94 +93,97 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 def get_available_gpus():
         local_device_protos = device_lib.list_local_devices()
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
+        
+        
+if __name__ == "__main__":        
 
-#Use pretrained VGG16 
-video = Input(shape=(frames,rows,columns,channels))
-cnn_base = VGG16(input_shape=(rows,columns,channels),
+  #Use pretrained VGG16 
+  video = Input(shape=(frames,rows,columns,channels))
+  cnn_base = VGG16(input_shape=(rows,columns,channels),
                  weights="imagenet",
                  #weights = None, 
                  include_top=False)
                              
 
-cnn_out = GlobalAveragePooling2D()(cnn_base.output)
+  cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
-cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
+  cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
-#cnn.trainable = True
-
-#Use Transfer learning and train last 15 layers                 
-for layer in cnn_model.layers[:-18]:
+  #Use Transfer learning and train last 15 layers                 
+  for layer in cnn_model.layers[:-18]:
     layer.trainable = False
 
+  for layer in cnn_model.layers:
+    print(layer.trainable)
 
-#cnn_model.summary()
+  #Build LSTM network
+  encoded_frames = TimeDistributed(cnn_model)(video)
+  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
 
-for layer in cnn_model.layers:
-   print(layer.trainable)
-
-#Build LSTM network
-encoded_frames = TimeDistributed(cnn_model)(video)
-encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
-
-# RELU or tanh?
-hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
-#hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
-
-dropout_layer = Dropout(rate=0.5)(hidden_layer)
-outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
-l_model = Model(video, outputs)
-num_gpus = get_available_gpus()
-if(len(num_gpus)>0):
+  # RELU or tanh?
+  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+  dropout_layer = Dropout(rate=0.5)(hidden_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
+  
+  #create model CNN+LSTM
+  l_model = Model(video, outputs)
+  
+  #get number of GPUs
+  num_gpus = get_available_gpus()
+  
+  #GPU Optimization
+  if(len(num_gpus)>0):
     num_gpus = len(num_gpus)
-lstm_model = multi_gpu_model(l_model, 
+    lstm_model = multi_gpu_model(l_model, 
                              gpus=num_gpus,
                              cpu_merge=True,
                              cpu_relocation=True)
-lstm_model.summary()
-#cnn_model.summary() 
-#pdb.set_trace()
+  else:
+    lstm_model = l_model
+                                    
+  lstm_model.summary()
 
-#Similar to Adam
-optimizer = Nadam(lr=0.00001,
+  #Similar to Adam
+  optimizer = Nadam(lr=0.00001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
                   schedule_decay=0.004)
 
-#softmax crossentropy
-lstm_model.compile(loss="categorical_crossentropy",
+  #softmax crossentropy
+  lstm_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
 
 
-train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
-validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
-train_len = int(len(train_samples)/(BATCH_SIZE*frames))
-train_len = (train_len)*BATCH_SIZE*frames
-train_samples = train_samples[0:train_len]
-validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-validation_len = (validation_len-2)*BATCH_SIZE*frames
-validation_samples = validation_samples[0:validation_len]
-print (train_len, validation_len)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+  train_len = int(len(train_samples)/(BATCH_SIZE*frames))
+  train_len = (train_len)*BATCH_SIZE*frames
+  train_samples = train_samples[0:train_len]
+  validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+  validation_len = (validation_len-2)*BATCH_SIZE*frames
+  validation_samples = validation_samples[0:validation_len]
+  print (train_len, validation_len)
 
-saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
+  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
                                     l_model, model_save_dir+"lstm_model.h5")
 
-#define callback functions
-history = History()
-callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             #save_best_only=True),
-             history,
-             saveCNN_Model]
- #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+  #define callback functions
+  history = History()
+  callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+               #save_best_only=True),
+               history,
+               saveCNN_Model]
+ #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
-# load training data
-train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
-validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
+  # load training data
+  train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
+  validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
 
-lstm_model.fit_generator(train_generator, 
+  lstm_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
@@ -189,21 +191,20 @@ lstm_model.fit_generator(train_generator,
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
-#plot_model(model, to_file='./logs/model.png', show_shapes=True)
-logfile = open('./logs/losses.txt', 'wt')
-logfile.write('\n'.join(str(l) for l in history.val_loss))
-logfile.close()
+  #plot_model(model, to_file='./logs/model.png', show_shapes=True)
+  logfile = open('./logs/losses.txt', 'wt')
+  logfile.write('\n'.join(str(l) for l in history.val_loss))
+  logfile.close()
                         
-#history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
-#print(history.history['loss'])
-history_dict = {}
-history_dict['val_loss'] = history.val_loss
-history_dict['train_loss'] = history.train_loss
-history_dict['train_acc'] = history.train_acc
-history_dict['val_acc'] = history.val_acc
-#dump history
-#json.dump(history.history, open(history_dir+'model_history', 'w'))
-with open(history_dir+'model_history', 'wb') as file_pi:
+  #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
+  history_dict = {}
+  history_dict['val_loss'] = history.val_loss
+  history_dict['train_loss'] = history.train_loss
+  history_dict['train_acc'] = history.train_acc
+  history_dict['val_acc'] = history.val_acc
+
+  #json.dump(history.history, open(history_dir+'model_history', 'w'))
+  with open(history_dir+'model_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
 #print(history.val_acc)
@@ -212,8 +213,10 @@ with open(history_dir+'model_history', 'wb') as file_pi:
 #plt.show()
 
 #save model and clear session
-del lstm_model
-tensorflow.keras.backend.clear_session()
+  del_cnn_model
+  del lstm_model
+  del cnn_base
+  tensorflow.keras.backend.clear_session()
 
 
 
