@@ -49,6 +49,19 @@ for i in range(int(len(train_list)/32)):
 
 print(X.shape, y.shape)
 
+train_generator = generator_CNN_train(train_list, 4, 1, shuffle=True)
+
+#for i in range(int(len(train_list)/16)):
+#  [X, y] = train_generator.__next__()
+
+
+test_generator = generator_CNN_test(test_list, 4, 1, shuffle=False)
+
+for i in range(int(len(test_list)/16)):
+ [X, y] = test_generator.__next__()
+
+print(X.shape, y.shape)
+
 
 
 
