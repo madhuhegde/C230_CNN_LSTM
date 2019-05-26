@@ -133,10 +133,13 @@ l_model = Model(video, outputs)
 num_gpus = get_available_gpus()
 if(len(num_gpus)>0):
     num_gpus = len(num_gpus)
-lstm_model = multi_gpu_model(l_model, 
+    lstm_model = multi_gpu_model(l_model, 
                              gpus=num_gpus,
                              cpu_merge=True,
                              cpu_relocation=True)
+else:
+    lstm_model = l_model
+                                
 lstm_model.summary()
 #cnn_model.summary() 
 #pdb.set_trace()
