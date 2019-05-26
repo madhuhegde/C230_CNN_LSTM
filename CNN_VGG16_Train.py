@@ -52,7 +52,7 @@ channels = 3
 rows = 224
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 10
+nb_epochs = 2
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -73,7 +73,7 @@ class History(tensorflow.keras.callbacks.Callback):
 # Implement ModelCheckPoint callback function to save CNN model
 class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 
-    def __init__(self,cnn_model, cnn_filename, lstm_model, lstm_filename):
+    def __init__(self,cnn_model, cnn_filename, lstm_model=None, lstm_filename=None):
         self.cnn_filename = cnn_filename
         self.cnn_model = cnn_model
         self.lstm_filename = lstm_filename
@@ -88,7 +88,8 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
            self.cnn_model.save(self.cnn_filename) 
-           self.lstm_model.save(self.lstm_filename)
+           if(self.lstm_model):
+              self.lstm_model.save(self.lstm_filename)
 
 
 def get_available_gpus():
@@ -149,11 +150,24 @@ validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
 #validation_samples = validation_samples[0:60*32*5]
 train_len = int(len(train_samples)/(BATCH_SIZE*frames))
 train_len = (train_len)*BATCH_SIZE*frames
-train_samples = train_samples[0:train_len]
+train_samples = train_samples[0:64] #train_len]
 validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
 validation_len = (validation_len-2)*BATCH_SIZE*frames
-validation_samples = validation_samples[0:validation_len]
-print ("Loading train data")
+validation_samples = validation_samples[0:32] #validation_len]
+print (train_len, validation_len)
+
+saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"vgg16_model.h5")
+
+
+#define callback functions
+history = History()
+callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             #save_best_only=True),
+             history,
+             saveCNN_Model]
+ #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+
 # load training data
 train_generator = generator_CNN_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=True)
 validation_generator = generator_CNN_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=False)
@@ -162,9 +176,36 @@ gpu_model.fit_generator(train_generator,
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
+            #callbacks = [history],
+            callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
+#plot_model(model, to_file='./logs/model.png', show_shapes=True)
+logfile = open('./logs/losses.txt', 'wt')
+logfile.write('\n'.join(str(l) for l in history.val_loss))
+logfile.close()
+                        
+#history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
+#print(history.history['loss'])
+history_dict = {}
+history_dict['val_loss'] = history.val_loss
+history_dict['train_loss'] = history.train_loss
+history_dict['train_acc'] = history.train_acc
+history_dict['val_acc'] = history.val_acc
+#dump history
+#json.dump(history.history, open(history_dir+'model_history', 'w'))
+with open(history_dir+'vgg16_model_history', 'wb') as file_pi:
+        pickle.dump(history_dict, file_pi)
+        
+#print(history.val_acc)
+#plt.title('model accuracy')
+#plt.ylabel('accuracy')
+#plt.show()
 
+#delete model and clear session
+del gpu_model
+del cnn_model
+tensorflow.keras.backend.clear_session()
 
 
 
