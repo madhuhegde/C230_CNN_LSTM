@@ -138,10 +138,12 @@ if __name__ == "__main__":
                              gpus=num_gpus,
                              cpu_merge=True,
                              cpu_relocation=True)
-  else:
+else:
     lstm_model = l_model
-                                    
-  lstm_model.summary()
+                                
+lstm_model.summary()
+#cnn_model.summary() 
+#pdb.set_trace()
 
   #Similar to Adam
   optimizer = Nadam(lr=0.00001,
