@@ -26,7 +26,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
         if(shuffle):
           random.shuffle(shuffle_order)
         
-        #frames_count = 0
+        frames_count = 0
         for offset in range(0, num_frames, batch_size):
             #batch_samples = samples[offset:offset+batch_size*frames_per_clip]
             
@@ -56,7 +56,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
                 consecutive_images.append(image)
                      
               images.append(consecutive_images)
-              #frames_count = frames_count +1
+              frames_count = frames_count +1
                
         
             X_batch = np.array(images)
