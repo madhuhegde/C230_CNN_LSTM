@@ -16,11 +16,9 @@ mkdir $target_dir/labels/train
 mkdir $target_dir/labels/test
 mkdir $target_dir/labels/eval
 
-#declare -a trainvideoindexes=("02" "03" "04" "05" "06" "10" "11" "12" "13" "14" "15" "17" "18" "21" "22" "24" "25" "26" "29" "32" "36" "37" "41" "43" "48" "49" "50" "51" "53")
-declare -a trainvideoindexes=("02" "03" "04" "05" "06" "10" "11" "12" "13" "14")
+declare -a trainvideoindexes=("02" "03" "04" "05" "06" "10" "11" "12" "13" "14" "15" "17" "18" "21" "22" "24" "25" "26" "29" "32" "36" "37" "41" "43" "48" "49" "50" "51" "53")
 
-#declare -a testvideoindexes=("01" "16" "40" "47")
-declare -a testvideoindexes=("16")
+declare -a testvideoindexes=("01" "16" "40" "47")
 
 declare -a evalvideoindexes=("77" "78" "79" "80")
 
@@ -29,13 +27,13 @@ declare -a evalvideoindexes=("77" "78" "79" "80")
 for i in "${trainvideoindexes[@]}"
 do
     echo "copy $vid_source_path/video$i* to $target_dir/videos/train/"
-    #cp $vid_source_path/videos/video$i* $target_dir/videos/train/
+    cp $vid_source_path/videos/video$i* $target_dir/videos/train/
 done
 
 for i in "${testvideoindexes[@]}"
 do
     echo "copy $vid_source_path/video$i* to $target_dir/videos/test/"
-    #cp $vid_source_path/videos/video$i* $target_dir/videos/test/ 
+    cp $vid_source_path/videos/video$i* $target_dir/videos/test/ 
 done
 
 for i in "${evalvideoindexes[@]}"

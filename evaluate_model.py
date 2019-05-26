@@ -86,11 +86,11 @@ pred = lstm_model.predict_generator(validation_generator, steps=int(len(validati
 lstm_model.summary()
 
 predfile = open('./logs/predictions_Yhat.txt', 'wt')
-predfile.write('\n'.join(str(p).strip() for p in pred))
+predfile.write('\r\n'.join(str(p).strip() for p in pred))
 predfile.close()
 
 validationfile = open('./logs/input_X.txt', 'wt')
-validationfile.write('\n'.join(str(s) for s in validation_samples))
+validationfile.write('\r\n'.join(str(s) for s in validation_samples))
 validationfile.close()
 
 print("predictions", pred)

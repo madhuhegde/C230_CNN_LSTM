@@ -97,8 +97,8 @@ if __name__ == "__main__":
      test_labels_path = label_base_dir+"test/"
      eval_labels_path = label_base_dir+"eval/"
      
-     #train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
-     #test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
+     train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
+     test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
      eval_num = process_videos(eval_video_path, eval_images_path, eval_labels_path, num_eval_videos, target_fps)
      
      
