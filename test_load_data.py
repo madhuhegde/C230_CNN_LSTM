@@ -9,6 +9,7 @@ import glob
 import numpy as np
 from CNN_LSTM_split_data import  generate_feature_train_list, generate_feature_test_list
 from CNN_LSTM_load_data import  generator_train, generator_test
+from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
 
 #base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 import json
