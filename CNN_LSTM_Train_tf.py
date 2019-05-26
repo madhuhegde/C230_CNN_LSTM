@@ -46,12 +46,12 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
+frames = 15    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 14
+nb_epochs = 10
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -125,7 +125,8 @@ hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
 dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 l_model = Model(video, outputs)
-lstm_model = multi_gpu_model(l_model, gpus=2)
+lstm_model = l_model
+#lstm_model = multi_gpu_model(l_model, gpus=2)
 lstm_model.summary()
 #cnn_model.summary() 
 #pdb.set_trace()
@@ -143,7 +144,7 @@ lstm_model.compile(loss="categorical_crossentropy",
               metrics=["categorical_accuracy"]) 
 
 
-
+print(train_image_dir, train_label_dir)
 train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
 validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
 train_len = int(len(train_samples)/(BATCH_SIZE*frames))
@@ -161,8 +162,8 @@ saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
              #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
              #save_best_only=True),
-             saveCNN_Model]
- #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+             saveCNN_Model,
+             TensorBoard(log_dir='./logs/fps1Graph', histogram_freq=5, write_graph=True, write_images=False)]
 
 # load training data
 train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)

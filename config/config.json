@@ -1,5 +1,5 @@
 {
-	  "base_dir": "/home/madhu_hegde/cs230/data/cholec_mini_data/",
-	  "model_save_dir": "/home/madhu_hegde/cs230/data/",
-	  "history_dir": "/home/madhu_hegde/cs230/data/"
+	  "base_dir": "data/",
+	  "model_save_dir": "data/",
+	  "history_dir": "data/"
 }
