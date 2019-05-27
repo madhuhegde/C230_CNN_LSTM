@@ -2,9 +2,8 @@ import io
 import os
 import subprocess
 import glob
-source_data_dir = "data/"
-base_dir = "data/"
-phase_gt_dir = source_data_dir+"phase_annotations/"
+base_dir = "/Users/madhuhegde/work/cs230/data/cholec_mini_data/"
+phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"
 label_base_dir = base_dir+"labels/"

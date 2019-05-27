@@ -42,7 +42,7 @@ def generate_feature_train_list(image_dir, label_dir):
 
     
       
-    print(len(local_image_files), len(labels))
+    #print(len(local_image_files), len(labels))
     feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
     
   return(feature_list)
@@ -56,7 +56,7 @@ def generate_feature_test_list(image_dir, label_dir):
   
 
   for label_file in label_files:
-    print(label_file)  
+    #print(label_file)  
     with open(label_file) as handle:
       #Read extra line that says Frames Phases
       handle.readline()
@@ -91,7 +91,7 @@ def generate_feature_eval_list(image_dir, label_dir):
   
 
   for label_file in label_files:
-    print(label_file)  
+    #print(label_file)  
     with open(label_file) as handle:
       #Read extra line that says Frames Phases
       handle.readline()
