@@ -30,6 +30,7 @@ config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 model_save_dir = config["model_save_dir"]
 history_dir = config["history_dir"]
+model_type = config["model_type"]
 
 base_image_dir = base_dir+"images/"
 base_label_dir = base_dir+"labels/"
