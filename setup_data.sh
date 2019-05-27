@@ -16,12 +16,11 @@ mkdir $target_dir/labels/train
 mkdir $target_dir/labels/test
 mkdir $target_dir/labels/eval
 
-declare -a trainvideoindexes=("02" "03" "04" "05" "06" "10" "11" "12" "13" "14" "15" "18" "21" "22" "24" "25" "26" "29" "32" "33" "34" "35" "36" "37" "38" "39" "41" "42" "43" "45" "46" "48" "50" "51" "52" "53")
+declare -a trainvideoindexes=("01" "02" "04" "06" "07" "08" "09" "15" "19" "24" "25" "26" "27" "28" "29" "30" "31" "32" "34" "35" "37" "38" "39" "40" "41" "42" "46")
 
-declare -a testvideoindexes=("01" "16" "17" "40" "44" "47" "49")
+declare -a testvideoindexes=("03" "05" "20" "21" "23" "33" "36" "43" "44" "45" "47" "48" "55" "57")
 
-declare -a evalvideoindexes=("77" "78" "79" "80")
-
+declare -a evalvideoindexes=("60" "63" "64" "68" "69" "71" "72" "73" "74" "75" "77" "78" "79" "80")
 
 
 for i in "${trainvideoindexes[@]}"
@@ -44,4 +43,4 @@ done
 
 cp $vid_source_path/phase_annotations/* $target_dir/phase_annotations/
 
-#python CNN_LSTM_data_prepare.py
+python CNN_LSTM_data_prepare.py
