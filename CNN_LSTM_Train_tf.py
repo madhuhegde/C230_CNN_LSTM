@@ -128,7 +128,7 @@ def get_LSTM_model(input, base_model):
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
   
   #create model CNN+LSTM
-  l_model = Model(video, outputs) 
+  l_model = Model(input, outputs) 
   
   return(l_model)
   
