@@ -185,6 +185,8 @@ if __name__ == "__main__":
   
   print(num_gpus)
   #GPU Optimization
+  #disable GPU Optimization until accuracy issues are resolved
+  num_gpus = []
   if(len(num_gpus)>0):
     num_gpus = len(num_gpus)
     lstm_model = multi_gpu_model(l_model, 
