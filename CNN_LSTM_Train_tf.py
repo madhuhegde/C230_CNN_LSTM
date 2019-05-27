@@ -125,7 +125,6 @@ hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
 dropout_layer = Dropout(rate=0.5)(hidden_layer)
 outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
 l_model = Model(video, outputs)
-lstm_model = l_model
 lstm_model = multi_gpu_model(l_model, gpus=2)
 lstm_model.summary()
 #cnn_model.summary() 
