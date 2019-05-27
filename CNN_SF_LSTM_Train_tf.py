@@ -5,8 +5,8 @@ import tensorflow
 import matplotlib
 import json, pickle
 #matplotlib.use("TkAgg")
-import pdb
 from matplotlib import pyplot as plt
+import pdb
 
 from LossHistory import LossHistory
 from tensorflow.keras.utils import plot_model
@@ -18,6 +18,7 @@ from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
@@ -51,8 +52,11 @@ frames = 25    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
-BATCH_SIZE = 8
-nb_epochs = 10
+
+#training parameters
+BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
+nb_epochs = 2 # 
+
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -82,14 +86,13 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.max_val_acc = 0
         
+ 
     def on_epoch_end(self, batch, logs={}):    
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
            self.cnn_model.save(self.cnn_filename) 
            self.lstm_model.save(self.lstm_filename)
-
-
 def get_available_gpus():
         local_device_protos = device_lib.list_local_devices()
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
@@ -97,28 +100,33 @@ def get_available_gpus():
         
 if __name__ == "__main__":        
 
-  #Use pretrained VGG16 
-  video = Input(shape=(frames,rows,columns,channels))
-  cnn_base = VGG16(input_shape=(rows,columns,channels),
-                 weights="imagenet",
-                 #weights = None, 
-                 include_top=False)
-                             
+  #Define Input with batch_shape to train stateful LSTM  
+  video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
-  cnn_out = GlobalAveragePooling2D()(cnn_base.output)
+  # load lstm_model with shuffled data
+  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  lstm_weights = list()
 
-  cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
+  #load pretrained weights
+  for layer in prev_lstm_model.layers:
+    weights = layer.get_weights()
+    lstm_weights.append(weights)
 
-  #Use Transfer learning and train last 15 layers                 
-  for layer in cnn_model.layers[:-18]:
+  # print summary and clear model    
+  prev_lstm_model.summary
+  del prev_lstm_model
+
+  #load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'cnn_model.h5')
+
+  #freeze cnn weights for stateful LSTM
+  for layer in cnn_model.layers:
     layer.trainable = False
 
-  for layer in cnn_model.layers:
-    print(layer.trainable)
 
   #Build LSTM network
   encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
 
   # RELU or tanh?
   hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
@@ -127,7 +135,11 @@ if __name__ == "__main__":
   
   #create model CNN+LSTM
   l_model = Model(video, outputs)
-  
+
+  for i in range(len(l_model.layers)):
+    l_model.layers[i].set_weights(lstm_weights[i])
+
+  del lstm_weights
   #get number of GPUs
   num_gpus = get_available_gpus()
   
@@ -155,6 +167,8 @@ if __name__ == "__main__":
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
+
+
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
@@ -165,34 +179,34 @@ if __name__ == "__main__":
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
-  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
-                                    l_model, model_save_dir+"lstm_model.h5")
+  #saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
+  #                                  lstm_model, model_save_dir+"lstm_model.h5")
 
-  #define callback functions
+#define callback functions
   history = History()
   callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-               #save_best_only=True),
+               ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+               save_best_only=True),
                history,
-               saveCNN_Model]
+               #saveCNN_Model]
  #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
-  # load training data
-  train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
+  # load training data. 
+  #NOTE:  Shuffling turned off for stateful LSTM
+  train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=False) 
   validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
 
   lstm_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
-            #callbacks = [history],
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
-  #plot_model(model, to_file='./logs/model.png', show_shapes=True)
-  logfile = open('./logs/losses.txt', 'wt')
-  logfile.write('\n'.join(str(l) for l in history.val_loss))
-  logfile.close()
+#plot_model(model, to_file='./logs/model.png', show_shapes=True)
+#logfile = open('./logs/losses.txt', 'wt')
+#logfile.write('\n'.join(str(l) for l in history.history['loss']))
+#logfile.close()
                         
   #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
   history_dict = {}
@@ -205,16 +219,8 @@ if __name__ == "__main__":
   with open(history_dir+'model_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
-#print(history.val_acc)
-#plt.title('model accuracy')
-#plt.ylabel('accuracy')
-#plt.show()
-
-#save model and clear session
-  del_cnn_model
+  #save model and clear session
+  del cnn_model
+  del l_model
   del lstm_model
-  del cnn_base
   tensorflow.keras.backend.clear_session()
-
-
-

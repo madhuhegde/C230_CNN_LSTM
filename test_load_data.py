@@ -9,6 +9,7 @@ import glob
 import numpy as np
 from CNN_LSTM_split_data import  generate_feature_train_list, generate_feature_test_list
 from CNN_LSTM_load_data import  generator_train, generator_test
+from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
 
 #base_dir = "/home/madhu_hegde/cs230/data/cholec_mini_data/"
 import json
@@ -45,6 +46,19 @@ train_generator = generator_train(train_list, 4, 4, True)
 for i in range(int(len(train_list)/32)):
  [X, y] = train_generator.__next__()
  print (np.max(X[0]))
+
+print(X.shape, y.shape)
+
+train_generator = generator_CNN_train(train_list, 4, 1, shuffle=True)
+
+#for i in range(int(len(train_list)/16)):
+#  [X, y] = train_generator.__next__()
+
+
+test_generator = generator_CNN_test(test_list, 4, 1, shuffle=False)
+
+for i in range(int(len(test_list)/16)):
+ [X, y] = test_generator.__next__()
 
 print(X.shape, y.shape)
 

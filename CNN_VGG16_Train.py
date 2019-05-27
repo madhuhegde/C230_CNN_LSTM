@@ -1,6 +1,9 @@
 import numpy as np
 import os
 import time
+import random
+from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 import tensorflow
 import matplotlib
 import json, pickle
@@ -12,17 +15,14 @@ from LossHistory import LossHistory
 from tensorflow.keras.utils import plot_model
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Dropout
+from tensorflow.keras.layers import Dense, Input, Dropout, Flatten
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import TimeDistributed
-from tensorflow.keras.optimizers import Nadam
+from tensorflow.keras.optimizers import Nadam, Adam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
-
-from CNN_LSTM_load_data import  generator_train, generator_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -46,13 +46,13 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 
 num_classes = 7
 
-# Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
-channels = 3  #RGB
-rows = 224    
+# just rename some varialbes
+frames = 1 #redundant variable. Never change it other than 1
+channels = 3
+rows = 224
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 10
+nb_epochs = 2
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -73,7 +73,7 @@ class History(tensorflow.keras.callbacks.Callback):
 # Implement ModelCheckPoint callback function to save CNN model
 class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 
-    def __init__(self,cnn_model, cnn_filename, lstm_model, lstm_filename):
+    def __init__(self,cnn_model, cnn_filename, lstm_model=None, lstm_filename=None):
         self.cnn_filename = cnn_filename
         self.cnn_model = cnn_model
         self.lstm_filename = lstm_filename
@@ -82,66 +82,64 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.max_val_acc = 0
         
+ 
     def on_epoch_end(self, batch, logs={}):    
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
            self.cnn_model.save(self.cnn_filename) 
-           self.lstm_model.save(self.lstm_filename)
+           if(self.lstm_model):
+              self.lstm_model.save(self.lstm_filename)
 
 
 def get_available_gpus():
         local_device_protos = device_lib.list_local_devices()
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
-        
-        
-if __name__ == "__main__":        
+
+
+def get_VGG16_only_model():
 
   #Use pretrained VGG16 
-  video = Input(shape=(frames,rows,columns,channels))
-  cnn_base = VGG16(input_shape=(rows,columns,channels),
-                 weights="imagenet",
-                 #weights = None, 
-                 include_top=False)
-                             
+  cnn_base = VGG16(input_shape=(rows,columns,channels), weights='imagenet', include_top=False)
 
-  cnn_out = GlobalAveragePooling2D()(cnn_base.output)
+  #Add the fully-connected layers 
+  x = cnn_base.output
+  x = Flatten(name='flatten')(x)
+  x = Dense(4096, activation='relu', name='fc1')(x)
+  x = Dropout(0.5)(x)
+  x = Dense(1024, activation='relu', name='fc2')(x)
+  x = Dropout(0.2)(x)
+  x = Dense(num_classes, activation='softmax', name='predictions')(x)
 
-  cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
+  #Create your own model 
+  cnn_model = Model(inputs=cnn_base.input, outputs=x)
 
-  #Use Transfer learning and train last 15 layers                 
-  for layer in cnn_model.layers[:-18]:
-    layer.trainable = False
-
-  for layer in cnn_model.layers:
+  for layer in cnn_base.layers: #[:-13]:
+    layer.trainable = True #False
+    
+  for layer in cnn_base.layers:  
     print(layer.trainable)
+    
+  return(cnn_model) 
 
-  #Build LSTM network
-  encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
 
-  # RELU or tanh?
-  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
-  dropout_layer = Dropout(rate=0.5)(hidden_layer)
-  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
+if __name__ == "__main__":
+
+  cnn_model = get_VGG16_only_model()
   
-  #create model CNN+LSTM
-  l_model = Model(video, outputs)
-  
-  #get number of GPUs
   num_gpus = get_available_gpus()
   
   #GPU Optimization
   if(len(num_gpus)>0):
     num_gpus = len(num_gpus)
-    lstm_model = multi_gpu_model(l_model, 
+    gpu_model = multi_gpu_model(cnn_model, 
                              gpus=num_gpus,
                              cpu_merge=True,
                              cpu_relocation=True)
   else:
-    lstm_model = l_model
-                                
-  lstm_model.summary()
+    gpu_model = cnn_model
+    
+  cnn_model.summary()
 
   #Similar to Adam
   optimizer = Nadam(lr=0.00001,
@@ -151,12 +149,16 @@ if __name__ == "__main__":
                   schedule_decay=0.004)
 
   #softmax crossentropy
-  lstm_model.compile(loss="categorical_crossentropy",
+  gpu_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
+
+
+
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+  #validation_samples = validation_samples[0:60*32*5]
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]
@@ -165,23 +167,23 @@ if __name__ == "__main__":
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
-  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
-                                    l_model, model_save_dir+"lstm_model.h5")
+  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"vgg16_model.h5")
+
 
   #define callback functions
   history = History()
   callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-               #save_best_only=True),
-               history,
-               saveCNN_Model]
- #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+             #save_best_only=True),
+             history,
+             saveCNN_Model]
+ #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
 
   # load training data
-  train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=True)
-  validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
+  train_generator = generator_CNN_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=True)
+  validation_generator = generator_CNN_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=False)
 
-  lstm_model.fit_generator(train_generator, 
+  gpu_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
@@ -195,6 +197,7 @@ if __name__ == "__main__":
   logfile.close()
                         
   #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
+  #print(history.history['loss'])
   history_dict = {}
   history_dict['val_loss'] = history.val_loss
   history_dict['train_loss'] = history.train_loss
@@ -202,18 +205,13 @@ if __name__ == "__main__":
   history_dict['val_acc'] = history.val_acc
 
   #json.dump(history.history, open(history_dir+'model_history', 'w'))
-  with open(history_dir+'model_history', 'wb') as file_pi:
+  with open(history_dir+'vgg16_model_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
-#print(history.val_acc)
-#plt.title('model accuracy')
-#plt.ylabel('accuracy')
-#plt.show()
 
-#save model and clear session
-  del_cnn_model
-  del lstm_model
-  del cnn_base
+  #delete model and clear session
+  del gpu_model
+  del cnn_model
   tensorflow.keras.backend.clear_session()
 
 
