@@ -108,7 +108,7 @@ def get_VGG16_base():
   cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
   #Use Transfer learning and train last 15 layers                 
-  for layer in cnn_model.layers[:-18]:
+  for layer in cnn_model.layers[:-15]:
     layer.trainable = False
 
   for layer in cnn_model.layers:
