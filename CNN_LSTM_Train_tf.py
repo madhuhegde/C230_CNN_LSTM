@@ -95,16 +95,13 @@ def get_available_gpus():
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
         
         
-if __name__ == "__main__":        
+def get_VGG16_base():
 
   #Use pretrained VGG16 
-  video = Input(shape=(frames,rows,columns,channels))
   cnn_base = VGG16(input_shape=(rows,columns,channels),
                  weights="imagenet",
                  #weights = None, 
                  include_top=False)
-                             
-
   cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
   cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
@@ -115,9 +112,13 @@ if __name__ == "__main__":
 
   for layer in cnn_model.layers:
     print(layer.trainable)
+   
+  return(cnn_model)         
+  
+def get_LSTM_model(input, base_model):
 
   #Build LSTM network
-  encoded_frames = TimeDistributed(cnn_model)(video)
+  encoded_frames = TimeDistributed(base_model)(input)
   encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
 
   # RELU or tanh?
@@ -126,11 +127,62 @@ if __name__ == "__main__":
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
   
   #create model CNN+LSTM
-  l_model = Model(video, outputs)
+  l_model = Model(video, outputs) 
+  
+  return(l_model)
+  
+  
+  
+def get_stacked_LSTM_model(input, base_model):
+
+  #Build LSTM network
+  encoded_frames = TimeDistributed(base_model)(input)
+  first_LSTM_layer = LSTM(1024, return_sequences=True, name='lstm1')(encoded_frames)
+  dropout_layer_1 = Dropout(rate=0.3) (first_LSTM_layer)
+  # RELU or tanh?
+  #hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
+  second_LSTM_layer = LSTM(1024, name='lstm2')(dropout_layer_1)
+
+  dropout_layer_2 = Dropout(rate=0.3)(second_LSTM_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
+  
+  #create model CNN+LSTM
+  l_model = Model(input, outputs) 
+  
+  return(l_model)  
+  
+  
+# Function pointers for models
+  
+cnn_func_ptr = {
+ 'VGG16_NORM_LSTM' : get_VGG16_base,
+ 'VGG16_STACKED_LSTM' : get_VGG16_base
+ 
+}     
+  
+lstm_func_ptr = {
+ 'VGG16_NORM_LSTM' : get_LSTM_model,
+ 'VGG16_STACKED_LSTM' : get_stacked_LSTM_model
+ 
+}   
+  
+# main function   
+        
+if __name__ == "__main__":        
+
+  # Define Input type
+  video = Input(shape=(frames,rows,columns,channels))
+  
+  cnn_model = cnn_func_ptr[model_type]()
+  
+  l_model = lstm_func_ptr[model_type](video, cnn_model)
+  
+  
   
   #get number of GPUs
   num_gpus = get_available_gpus()
   
+  print(num_gpus)
   #GPU Optimization
   if(len(num_gpus)>0):
     num_gpus = len(num_gpus)
@@ -161,7 +213,7 @@ if __name__ == "__main__":
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]
   validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-  validation_len = (validation_len-2)*BATCH_SIZE*frames
+  validation_len = (validation_len)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
@@ -211,9 +263,8 @@ if __name__ == "__main__":
 #plt.show()
 
 #save model and clear session
-  del_cnn_model
+  del cnn_model
   del lstm_model
-  del cnn_base
   tensorflow.keras.backend.clear_session()
 
 
