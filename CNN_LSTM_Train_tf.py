@@ -155,8 +155,6 @@ if __name__ == "__main__":
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-
-
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
