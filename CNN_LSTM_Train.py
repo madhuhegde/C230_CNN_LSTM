@@ -3,7 +3,7 @@ import os
 import time
 from CNN_LSTM_load_data import load_cholec_data, generator
 from CNN_LSTM_split_data import split_cholec_data, train_test_data_split
-
+from LossHistory import LossHistory
 
 from keras.applications.vgg16 import VGG16
 from keras.models import Model
@@ -15,7 +15,7 @@ from keras.optimizers import Nadam
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-base_dir = "/Users/madhuhegde/Downloads/cholec80/"
+base_dir = "data/"
 image_dir = base_dir+"images/"
 label_dir = base_dir+"labels/"
 
@@ -26,7 +26,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # just rename some varialbes
-frames = 4
+frames = 25
 channels = 3
 rows = 224
 columns = 224 
@@ -38,6 +38,10 @@ video = Input(shape=(frames,rows,columns,channels))
 cnn_base = VGG16(input_shape=(rows,columns,channels),
                  weights="imagenet",
                  include_top=False)
+                 
+#Use Transfer learning and train only last 4 layers                 
+for layer in cnn_base.layers[:-4]:
+   layer.trainable = False                 
 
 cnn_out = GlobalAveragePooling2D()(cnn_base.output)
 
@@ -79,8 +83,8 @@ model.compile(loss="categorical_crossentropy",
 #%%
 
 #training parameters
-BATCH_SIZE = 32 # increase if your system can cope with more data
-nb_epochs = 2 # I once achieved 50% accuracy with 400 epochs. Feel free to change
+BATCH_SIZE = 16 # increase if your system can cope with more data
+nb_epochs = 4 # I once achieved 50% accuracy with 400 epochs. Feel free to change
 
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
@@ -93,13 +97,15 @@ print ("Loading train data")
 train_generator = generator(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 validation_generator = generator(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames)
 
+history = LossHistory()
 model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/BATCH_SIZE), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/BATCH_SIZE), 
-            epochs=2, verbose=1)
+            epochs=nb_epochs, verbose=1, callbacks=[history])
 
-
-
+logfile = open('logs/losses.txt', 'wt')
+logfile.write(history.losses)
+logfile.close()
 
 
