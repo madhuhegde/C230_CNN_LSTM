@@ -29,15 +29,16 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 
+#save as [video][phase]
 def generate_video_histogram(video_list):
    hist_dict = {}
    
-   for video_image in video_list:
+   for list_item in video_list:
    
-     #print(video_image)
-     video_file = video_image[0].split('/')
+     #print(list_item)
+     video_file = list_item[0].split('/')
      video_file = video_file[0]
-     label = video_image[1].split('\t')
+     label = list_item[1].split('\t')
      label = label[1].strip()
      if video_file not in hist_dict:
        hist_dict[video_file] = {}
@@ -52,7 +53,29 @@ def generate_video_histogram(video_list):
         
    return hist_dict
   
+# save as [label][video]  
+def generate_video_histogram_v2(video_list):
+   hist_dict = {}
    
+   for list_item in video_list:
+   
+     #print(list_item)
+     video_file = list_item[0].split('/')
+     video_file = video_file[0]
+     label = list_item[1].split('\t')
+     label = label[1].strip()
+     if label not in hist_dict:
+       hist_dict[label] = {}
+       
+       
+     label_dict = hist_dict[label]
+     #print(label_dict)
+     if video_file not in label_dict:
+        label_dict[video_file] = 1
+     else:
+        label_dict[video_file] = label_dict[video_file] + 1
+        
+   return hist_dict   
 
 
 #[train_list, test_list]  = train_test_data_split(image_dir, label_dir, 0.2)
