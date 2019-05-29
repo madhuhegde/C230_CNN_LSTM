@@ -40,7 +40,9 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 test_videos = ['video03']
-train_videos = ['video01']
+train_videos = ['video02', 'video04', 'video12', 'video17', 'video21', 'video24', 
+                'video36', 'video40', 'video41','video51', 'video60', 'video65']
+
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
