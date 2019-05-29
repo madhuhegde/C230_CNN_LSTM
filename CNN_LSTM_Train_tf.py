@@ -39,6 +39,8 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
+test_videos = ['video03']
+train_videos = ['video01']
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -210,8 +212,8 @@ if __name__ == "__main__":
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
-  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]

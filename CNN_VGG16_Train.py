@@ -38,6 +38,10 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
+train_videos = ['video01']
+test_videos = ['video03']
+
+
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -128,6 +132,7 @@ if __name__ == "__main__":
   cnn_model = get_VGG16_only_model()
   
   num_gpus = get_available_gpus()
+  num_gpus = []
   
   #GPU Optimization
   if(len(num_gpus)>0):
@@ -156,8 +161,8 @@ if __name__ == "__main__":
 
 
 
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
-  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   #validation_samples = validation_samples[0:60*32*5]
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
