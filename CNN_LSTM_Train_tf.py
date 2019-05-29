@@ -39,9 +39,11 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video03']
-train_videos = ['video02', 'video04', 'video12', 'video17', 'video21', 'video24', 
-                'video36', 'video40', 'video41','video51', 'video60', 'video65']
+test_videos = ['video30', 'video31', 'video32',  'video34',  'video37', 'video39']
+aug_videos = ['video01', 'video05', 'video08', 'video09', 'video10', 'video14',
+              'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69', 'video71']
+train_videos =  ['video02', 'video04', 'video12', 'video17', 'video21', 'video24', 
+                'video36', 'video41','video51', 'video60']
 
 
 # 7 phases for surgical operation
@@ -215,6 +217,10 @@ if __name__ == "__main__":
               metrics=["categorical_accuracy"]) 
 
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  aug_samples  = generate_feature_train_list(train_image_dir, train_label_dir, aug_videos)
+  print(len(train_samples), len(aug_samples))
+  train_samples.extend(aug_samples)
+  print(len(train_samples))
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
