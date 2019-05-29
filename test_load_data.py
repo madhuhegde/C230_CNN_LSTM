@@ -33,11 +33,11 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 
-test_videos = ['video01']
-aug_videos = ['video05', 'video08', 'video09', 'video10', 'video12', 'video14', 'video21', 'video25',  'video43', 
-            'video45', 'video48', 'video57', 'video64', 'video71']
+test_videos = ['video30', 'video31', 'video32',  'video34',  'video37', 'video39']
+aug_videos = ['video01', 'video05', 'video08', 'video09', 'video10', 'video14',
+              'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69', 'video71']
 train_videos =  ['video02', 'video04', 'video12', 'video17', 'video21', 'video24', 
-                'video36', 'video40', 'video41','video51', 'video60', 'video65']
+                'video36', 'video41','video51', 'video60']
 
 
 
@@ -97,7 +97,7 @@ def verify_test_vector():
   print(test_list[0])
   
   test_generator = generator_test(test_list, 4, 4, True)
-  for i in range(int(len(test_list[0:128])/32)):
+  for i in range(int(len(test_list[0:128*4])/32)):
     [X, y] = test_generator.__next__()
     
     
@@ -106,12 +106,12 @@ def verify_test_vector():
   
 def verify_train_vector():
  
-  train_list = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  train_list = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
   print(len(train_list))
   print(train_list[0])
   
   train_generator = generator_train(train_list, 4, 4, True)
-  for i in range(int(len(train_list[0:128])/32)):
+  for i in range(int(len(train_list[0:128*10])/32)):
     [X, y] = train_generator.__next__()
     
   print (np.max(X[0]))
@@ -138,11 +138,11 @@ def verify_CNN_generator():
 #  pickle.dump(hist_dict,file_pi)
 __name__ = "__main__"
 
-train_list = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
-print(len(train_list))
-print(train_list[176:188])
+#train_list = generate_feature_augment_list(train_image_dir, train_label_dir, train_videos)
+#print(len(train_list))
+#print(train_list[176:188])
 
-#train_list = verify_train_vector()
+train_list = verify_train_vector()
 #train_list = train_list[0:128]  
 #train_generator = generator_train(train_list, 4, 4, True)
 
