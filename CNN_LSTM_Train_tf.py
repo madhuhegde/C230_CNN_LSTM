@@ -40,9 +40,9 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 test_videos = ['video30', 'video31', 'video32',  'video34',  'video37', 'video39']
-aug_videos = ['video01', 'video05', 'video08', 'video09', 'video10', 'video14',
-              'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69', 'video71']
-train_videos =  ['video02', 'video04', 'video12', 'video17', 'video21', 'video24', 
+aug_videos = ['video01', 'video04','video05', 'video08', 'video09', 'video10', 'video14','video017',
+              'video25',  'video41','video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69', 'video71']
+train_videos =  ['video02',  'video12', 'video21', 'video24', 
                 'video36', 'video41','video51', 'video60']
 
 
@@ -59,7 +59,7 @@ channels = 3  #RGB
 rows = 224    
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 10
+nb_epochs = 24
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
