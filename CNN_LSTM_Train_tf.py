@@ -40,9 +40,9 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 test_videos = ['video02',  'video12', 'video21', 'video24','video36', 'video41','video51']
-aug_videos = ['video01', 'video017', 'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69',
+aug_videos = ['video01', 'video17', 'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69',
               'video71', 'video30',  'video32',  'video34',  'video37', 'video39', 'video60','video31']
-train_videos =  ['video04','video05', 'video08', 'video09', 'video10', 'video14','video41']
+train_videos =  ['video04','video05', 'video08', 'video09', 'video10', 'video14']
 
 
 # 7 phases for surgical operation
