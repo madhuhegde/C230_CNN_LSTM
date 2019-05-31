@@ -20,6 +20,7 @@ from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
+from sklearn.utils import class_weight
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
@@ -59,6 +60,23 @@ rows = 224
 columns = 224 
 BATCH_SIZE = 8
 nb_epochs = 24
+
+
+# Compute class_weights for imbalanced train set
+def compute_class_weight(input_list):
+
+  label_list = []
+  for label in input_list:
+    label = label[1].split('\t')[1].strip()
+    label_list.append(label)
+  
+  class_weights = class_weight.compute_class_weight('balanced', 
+                                                   np.unique(label_list),  
+                                                   label_list)
+                                                   
+  return(class_weights)                                                 
+                                                   
+  
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
