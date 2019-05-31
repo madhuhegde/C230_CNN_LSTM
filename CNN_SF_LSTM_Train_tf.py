@@ -23,6 +23,9 @@ from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 
+train_videos = ['video01']
+test_videos = ['video03']
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 config = json.load(open('config/config.json'))
@@ -154,8 +157,8 @@ lstm_model.compile(loss="categorical_crossentropy",
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
 
 
-train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
-validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
 train_len = int(len(train_samples)/(BATCH_SIZE*frames))
 train_len = (train_len)*BATCH_SIZE*frames
 train_samples = train_samples[0:train_len]

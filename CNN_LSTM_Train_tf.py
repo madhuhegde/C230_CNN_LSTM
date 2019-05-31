@@ -20,9 +20,12 @@ from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
+from sklearn.utils import class_weight
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_augment_list
+
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -39,6 +42,13 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
+test_videos = ['video04',  'video12', 'video17', 'video21','video24', 'video36', 'video40']
+aug_videos = ['video01', 'video02','video17', 'video25', 'video30', 'video32',  'video34', 'video37', 'video39', 
+              'video42', 'video43',  'video45', 'video48', 'video57','video67','video69','video65', 'video71',  
+              'video60','video31','video51']
+
+train_videos =  ['video05', 'video08', 'video09', 'video10', 'video12','video14','video65']
+
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -53,7 +63,24 @@ channels = 3  #RGB
 rows = 224    
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 10
+nb_epochs = 24
+
+
+# Compute class_weights for imbalanced train set
+def compute_class_weight(input_list):
+
+  label_list = []
+  for label in input_list:
+    label = label[1].split('\t')[1].strip()
+    label_list.append(label)
+  
+  class_weights = class_weight.compute_class_weight('balanced', 
+                                                   np.unique(label_list),  
+                                                   label_list)
+                                                   
+  return(class_weights)                                                 
+                                                   
+  
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -210,8 +237,13 @@ if __name__ == "__main__":
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir)
-  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  aug_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
+  print(len(train_samples), len(aug_samples))
+  train_samples.extend(aug_samples)
+  print(len(train_samples))
+  class_weights = compute_class_weight(train_samples)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]
@@ -240,7 +272,7 @@ if __name__ == "__main__":
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
-            #callbacks = [history],
+            class_weight = class_weights,
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
