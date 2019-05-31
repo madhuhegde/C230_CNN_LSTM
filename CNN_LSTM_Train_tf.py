@@ -42,10 +42,12 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video02',  'video12', 'video21', 'video24','video36', 'video41','video51']
-aug_videos = ['video01', 'video17', 'video25',  'video42', 'video43',  'video45', 'video48', 'video57', 'video67','video69',
-              'video71', 'video30',  'video32',  'video34',  'video37', 'video39', 'video60','video31']
-train_videos =  ['video04','video05', 'video08', 'video09', 'video10', 'video14']
+test_videos = ['video04',  'video12', 'video17', 'video21','video24', 'video36', 'video40']
+aug_videos = ['video01', 'video02','video17', 'video25', 'video30', 'video32',  'video34', 'video37', 'video39', 
+              'video42', 'video43',  'video45', 'video48', 'video57','video67','video69','video65', 'video71',  
+              'video60','video31','video51']
+
+train_videos =  ['video05', 'video08', 'video09', 'video10', 'video12','video14','video65']
 
 
 # 7 phases for surgical operation
@@ -240,6 +242,7 @@ if __name__ == "__main__":
   print(len(train_samples), len(aug_samples))
   train_samples.extend(aug_samples)
   print(len(train_samples))
+  class_weights = compute_class_weight(train_samples)
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
@@ -269,7 +272,7 @@ if __name__ == "__main__":
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
-            #callbacks = [history],
+            class_weight = class_weights,
             callbacks = callbacks,
             epochs=nb_epochs, verbose=1)
 
