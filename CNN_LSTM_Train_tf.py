@@ -24,6 +24,8 @@ from sklearn.utils import class_weight
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_augment_list
+
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -234,7 +236,7 @@ if __name__ == "__main__":
               metrics=["categorical_accuracy"]) 
 
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
-  aug_samples  = generate_feature_train_list(train_image_dir, train_label_dir, aug_videos)
+  aug_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
   print(len(train_samples), len(aug_samples))
   train_samples.extend(aug_samples)
   print(len(train_samples))
