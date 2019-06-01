@@ -17,6 +17,7 @@ from tensorflow.keras.utils import multi_gpu_model
 from keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test, generator_eval
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_eval_list
+from surgical_flow_model import initialize_trans_matrix, predict_next_label
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='model/models/final_model.h5',
@@ -42,10 +43,14 @@ train_label_dir = base_label_dir + "train/"
 eval_image_dir = base_image_dir + "eval/"
 eval_label_dir = base_label_dir + "eval/"
 
+initialize_trans_matrix()
 
 # 7 phases for surgical operation
 class_labels = ["Preparation", "CalotTriangleDissection", "ClippingCutting", 
            "GallbladderDissection", "GallbladderPackaging", "CleaningCoagulation", "GallbladderRetraction"]
+           
+class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}           
 
 # Dimensions of input feature 
 frames = args.frames    #Number of frames over which LSTM prediction happens
@@ -125,12 +130,19 @@ gtfile.close()
 
 ytrue_labels = [class_labels[i] for i in y]
 yhat_labels = [class_labels[i] for i in yhat]
-print("ytrue_labels", ytrue_labels)
-print("ypred_labels", yhat_labels)
+
+yhat_pred_labels = predict_next_label(yhat_labels)
+yhat_pred = [class_labels_dict[i] for i in yhat_pred_labels]
+
+#print("ytrue_labels", ytrue_labels)
+#print("ypred_labels", yhat_labels)
 #print("ground truth", [class_labels[i] for i in y])
 #print("predictions", [class_labels[i] for i in yhat])
 
 cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
+print(cm)
+
+cm = confusion_matrix(y, yhat_pred, labels = [0, 1, 2, 3, 4, 5, 6])
 print(cm)
 
 cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
