@@ -18,6 +18,7 @@ from keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test, generator_eval
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_eval_list
 from surgical_flow_model import initialize_trans_matrix, predict_next_label
+import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='model/models/final_model.h5',
@@ -131,8 +132,11 @@ gtfile.close()
 ytrue_labels = [class_labels[i] for i in y]
 yhat_labels = [class_labels[i] for i in yhat]
 
-yhat_pred_labels = predict_next_label(yhat_labels)
-yhat_pred = [class_labels_dict[i] for i in yhat_pred_labels]
+#yhat_pred = predict_next_label(yhat_labels)
+#yhat = [class_labels_dict[i] for i in yhat_pred]
+y_save = [ytrue_labels, yhat_labels]
+with open('label_history', 'wb') as file_pi:
+        pickle.dump(y_save, file_pi)
 
 #print("ytrue_labels", ytrue_labels)
 #print("ypred_labels", yhat_labels)
@@ -142,8 +146,8 @@ yhat_pred = [class_labels_dict[i] for i in yhat_pred_labels]
 cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
 print(cm)
 
-cm = confusion_matrix(y, yhat_pred, labels = [0, 1, 2, 3, 4, 5, 6])
-print(cm)
+#cm = confusion_matrix(y, yhat_pred, labels = [0, 1, 2, 3, 4, 5, 6])
+#print(cm)
 
 cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
 print(cr)
