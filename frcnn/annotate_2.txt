@@ -1,0 +1,1 @@
+/usr/local/LSTM-KTH/keras-frcnn/JPEGImages/v05_029275.jpg,582,238,841,470,Hook
