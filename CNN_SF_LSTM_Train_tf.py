@@ -23,7 +23,7 @@ from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list,  remove_transition_samples
 
-train_videos = ['video02', 'video17', 'video'25']
+train_videos = ['video02', 'video17', 'video25']
 test_videos = ['video04', 'video21','video24']
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
