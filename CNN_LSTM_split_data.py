@@ -13,6 +13,35 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
 
+def transition_clip(transition_samples):
+   label_set = []
+   for sample in transition_samples:
+      label = sample[1].split('\t')[1].strip()
+      label_set.append(label)
+      
+   label_set = set(label_set)
+   
+   #print(label_set)
+   
+   if(len(label_set)>1):
+      return(True)
+   else:
+      return(False)     
+
+def remove_transition_samples(samples, frames_per_clip = 25):
+  smooth_samples = []
+  num_frames = int(len(samples)/frames_per_clip)
+    
+  
+  for frame_count in range(0, num_frames):
+    
+    sample_start = frame_count*frames_per_clip
+    frame_samples = samples[sample_start:sample_start + frames_per_clip]
+           
+    if(transition_clip(frame_samples) == False):
+      smooth_samples.extend(frame_samples)
+      
+  return(smooth_samples)
 
 def generate_feature_augment_list(image_dir, label_dir, video_files):
 
