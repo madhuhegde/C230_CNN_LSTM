@@ -21,10 +21,10 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 from tensorflow.keras.models import load_model
 
 from CNN_LSTM_load_data import  generator_train, generator_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list,  remove_transition_samples
 
-train_videos = ['video01']
-test_videos = ['video03']
+train_videos = ['video02', 'video17', 'video'25']
+test_videos = ['video04', 'video21','video24']
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -55,8 +55,10 @@ rows = 224
 columns = 224 
 
 #training parameters
-BATCH_SIZE = 8 # Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 2 # 
+BATCH_SIZE = 8# Need GPU with 32 GB RAM for BATCH_SIZE > 16
+nb_epochs = 1 # 
+
+class_weights = [2,2,1,2,2,1,1]
 
 
 # Define callback function if detailed log required
@@ -141,7 +143,7 @@ for i in range(len(lstm_model.layers)):
 
 
 #Similar to Adam
-optimizer = Nadam(lr=0.00001,
+optimizer = Nadam(lr=0.0001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -156,57 +158,73 @@ lstm_model.compile(loss="categorical_crossentropy",
 
 #generate indices for train_array an test_array with train_test_split_ratio = 0.
 
-
-train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
-validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
-train_len = int(len(train_samples)/(BATCH_SIZE*frames))
-train_len = (train_len)*BATCH_SIZE*frames
-train_samples = train_samples[0:train_len]
-validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-validation_len = (validation_len-2)*BATCH_SIZE*frames
-validation_samples = validation_samples[0:validation_len]
-print (train_len, validation_len)
-
-saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
-                                    lstm_model, model_save_dir+"lstm_model.h5")
-
 #define callback functions
+  
+saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_nouse.h5",
+                                    lstm_model, model_save_dir+"lstm_stateful_model.h5")
+history = History()
 callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-             #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-             #save_best_only=True),
-             saveCNN_Model]
- #            TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+               #save_best_only=True),
+               history,
+               saveCNN_Model]
+ #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+ 
+ 
+def train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks):
 
-# load training data
-train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=False)
-validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  
+  train_samples = remove_transition_samples(train_samples, frames)
+  print(len(train_samples))
+  #class_weights = compute_class_weight(train_samples)
+  
 
-history = lstm_model.fit_generator(train_generator, 
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
+  
+  validation_samples = remove_transition_samples(validation_samples, frames)
+  
+  train_len = int(len(train_samples)/(BATCH_SIZE*frames))
+  train_len = (train_len)*BATCH_SIZE*frames
+  train_samples = train_samples[0:train_len]
+  validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+  validation_len = (validation_len-2)*BATCH_SIZE*frames
+  validation_samples = validation_samples[0:validation_len]
+  print (train_len, validation_len)
+
+
+
+
+  # load training data
+  train_generator = generator_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=frames,shuffle=False)
+  validation_generator = generator_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
+
+  lstm_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
-            #callbacks = [history],
-            #callbacks = callbacks,
-            epochs=nb_epochs, verbose=1)
+            class_weight = class_weights,
+            callbacks = callbacks,
+            epochs=1, verbose=1)
 
-#plot_model(model, to_file='./logs/model.png', show_shapes=True)
-#logfile = open('./logs/losses.txt', 'wt')
-#logfile.write('\n'.join(str(l) for l in history.history['loss']))
-#logfile.close()
-                        
+  lstm_model.reset_states()
+  
+  return(lstm_model, history)
+  
+
+for i in range(0,len(train_videos)):
+  train_video = [train_videos[i]]
+  test_video = [test_videos[i]]
+  lstm_model, history =  train_stateful_lstm(lstm_model, train_video, test_video, callbacks)
+
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
-print(history.history['loss'])
+
 
 #dump history
 #json.dump(history.history, open(history_dir+'model_history', 'w'))
 with open(history_dir+'lstm_model_history', 'wb') as file_pi:
-        pickle.dump(history.history, file_pi)
+        pickle.dump(history, file_pi)
         
-#print(history.val_acc)
-#plt.title('model accuracy')
-#plt.ylabel('accuracy')
-#plt.show()
-
 #save model and clear session
 del lstm_model
 tensorflow.keras.backend.clear_session()
