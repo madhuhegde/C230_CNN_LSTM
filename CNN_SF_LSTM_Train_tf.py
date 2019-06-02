@@ -173,7 +173,7 @@ callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
  
 def train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks):
 
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, ['video02', 'video17', 'video'25']) #train_videos)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, ['video02', 'video17', 'video25']) #train_videos)
   
   train_samples = remove_transition_samples(train_samples, frames)
   print(len(train_samples))
