@@ -45,7 +45,7 @@ train_label_dir = base_label_dir + "train/"
 test_videos = ['video04',  'video12', 'video17', 'video21','video24', 'video36', 'video40']
 aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31', 'video32',  'video34', 'video37', 
               'video39', 'video42', 'video43',  'video45', 'video48', 'video51', 'video57',  'video60', 'video67',  
-			  'video69', 'video65', 'video71']
+	      'video69', 'video71']
 
 train_videos =  ['video05', 'video08', 'video09', 'video10', 'video12','video14','video65']
 
