@@ -14,7 +14,7 @@ from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.optimizers import Nadam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test, generator_eval
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_eval_list
 from CNN_LSTM_split_data import remove_transition_samples
@@ -55,17 +55,13 @@ BATCH_SIZE = 8 #args.batch_size
 # return y, yhat
 def evaluate_model(lstm_model, eval_videos, callbacks):
   
-  validation_samples = generate_feature_eval_list(eval_image_dir, eval_label_dir, eval_videos)
+  validation_samples = generate_feature_test_list(eval_image_dir, eval_label_dir, eval_videos)
   #validation_samples = remove_transition_samples(validation_samples, frames)
   validation_len = 4 #int(len(validation_samples)/(BATCH_SIZE*frames))
   validation_len = (validation_len-2)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
   print ("Validatation Length:{0}".format(validation_len))
 
-  y = [1]
-  yhat = [1]
-  return(y,yhat)
-  
 
 #model_callbacks = [TensorBoard(log_dir='./logs/Graph', histogram_freq=5, write_graph=True, write_images=True, write_grads=True)]
 #lstm_model.summary()
