@@ -217,7 +217,7 @@ if __name__=="__main__":
   history_dict['train_acc'] = history.train_acc
   history_dict['val_acc'] = history.val_acc
 
-  with open(history_dir+'lstm_model_history', 'wb') as file_pi:
+  with open(history_dir+'sf_lstm_model_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
 #save model and clear session
