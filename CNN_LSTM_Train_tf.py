@@ -24,7 +24,7 @@ from sklearn.utils import class_weight
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
-from CNN_LSTM_split_data import generate_feature_augment_list
+from CNN_LSTM_split_data import generate_feature_augment_list, remove_transition_samples
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -243,14 +243,14 @@ if __name__ == "__main__":
   train_samples.extend(aug_samples)
   print(len(train_samples))
   
-  train_samples = remove_transition_clips(train_samples, frames_per_clip)
+  train_samples = remove_transition_samples(train_samples, frames)
   print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
   
   class_weights = [2,2,1,2,2,1,1]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
-  validation_samples = remove_transition_clips(validation_samples, frames_per_clip)
+  validation_samples = remove_transition_samples(validation_samples, frames)
   
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
