@@ -23,8 +23,8 @@ from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list,  remove_transition_samples
 
-train_videos = ['video02', 'video17', 'video25']
-test_videos = ['video04', 'video21','video24']
+train_videos = ['video28','video41', 'video46', 'video47']
+test_videos = ['video49']
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -81,8 +81,8 @@ class History(tensorflow.keras.callbacks.Callback):
 class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 
     def __init__(self,cnn_model, cnn_filename, lstm_model, lstm_filename):
-        self.cnn_filename = cnn_filename
-        self.cnn_model = cnn_model
+        #self.cnn_filename = cnn_filename
+        #self.cnn_model = cnn_model
         self.lstm_filename = lstm_filename
         self.lstm_model = lstm_model
 
@@ -94,93 +94,22 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
         val_acc = logs.get('val_categorical_accuracy')
         if(val_acc > self.max_val_acc):
            self.max_val_acc = val_acc
-           self.cnn_model.save(self.cnn_filename) 
+           #self.cnn_model.save(self.cnn_filename) 
            self.lstm_model.save(self.lstm_filename)
           
-
-#Define Input with batch_shape to train stateful LSTM  
-video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
-
-#load lstm_model with shuffled data
-prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
-lstm_weights = list()
-
-#load pretrained weights
-for layer in prev_lstm_model.layers:
-    weights = layer.get_weights()
-    lstm_weights.append(weights)
-
-# print summary and clear model    
-prev_lstm_model.summary
-del prev_lstm_model
-
-#load pre-trained cnn model
-cnn_model = load_model(model_save_dir+'cnn_model.h5')
-
-#freeze cnn weights for stateful LSTM
-for layer in cnn_model.layers:
-   layer.trainable = False
-
-
-
-#cnn_model.summary()
-
-#pdb.set_trace()
-
-encoded_frames = TimeDistributed(cnn_model)(video)
-encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
-
-# RELU or tanh?
-hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
-#hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
-
-dropout_layer = Dropout(rate=0.5)(hidden_layer)
-outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
-lstm_model = Model(video, outputs)
-
-for i in range(len(lstm_model.layers)):
-    lstm_model.layers[i].set_weights(lstm_weights[i])
-
-
-#Similar to Adam
-optimizer = Nadam(lr=0.0001,
-                  beta_1=0.9,
-                  beta_2=0.999,
-                  epsilon=1e-08,
-                  schedule_decay=0.004)
-
-#softmax crossentropy
-lstm_model.compile(loss="categorical_crossentropy",
-              optimizer=optimizer,
-              metrics=["categorical_accuracy"]) 
-
-
-
-#generate indices for train_array an test_array with train_test_split_ratio = 0.
-
-#define callback functions
-  
-saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_nouse.h5",
-                                    lstm_model, model_save_dir+"lstm_stateful_model.h5")
-history = History()
-callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
-               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
-               #save_best_only=True),
-               history,
-               saveCNN_Model]
- #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
  
  
 def train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks):
 
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, ['video02', 'video17', 'video25']) #train_videos)
+  print(train_videos)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
   
   train_samples = remove_transition_samples(train_samples, frames)
   print(len(train_samples))
   #class_weights = compute_class_weight(train_samples)
   
 
-  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, ['video04', 'video21','video24']) #test_videos)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)
   
@@ -206,25 +135,93 @@ def train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks):
             class_weight = class_weights,
             callbacks = callbacks,
             epochs=1, verbose=1)
-
-  lstm_model.reset_states()
   
-  return(lstm_model, history)
+  
+  return    
+
+
+if __name__=="__main__":
+  
+  #Define Input with batch_shape to train stateful LSTM  
+  video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
+
+  #load lstm_model with shuffled data
+  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  lstm_weights = list()
+
+  #load pretrained weights
+  for layer in prev_lstm_model.layers:
+     weights = layer.get_weights()
+     lstm_weights.append(weights)
+
+  # print summary and clear model    
+  prev_lstm_model.summary
+  del prev_lstm_model
+
+  #load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'cnn_model.h5')
+
+  #freeze cnn weights for stateful LSTM
+  for layer in cnn_model.layers:
+    layer.trainable = False
+
+  #LSTM model must match stateless LSTM
+  encoded_frames = TimeDistributed(cnn_model)(video)
+  encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
+
+  # RELU or tanh?
+  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+
+
+  dropout_layer = Dropout(rate=0.5)(hidden_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
+  lstm_model = Model(video, outputs)
+
+  for i in range(len(lstm_model.layers)):
+    lstm_model.layers[i].set_weights(lstm_weights[i])
+
+
+  #Similar to Adam 
+  optimizer = Nadam(lr=0.00005,
+                  beta_1=0.9,
+                  beta_2=0.999,
+                  epsilon=1e-08,
+                  schedule_decay=0.004)
+
+  #softmax crossentropy
+  lstm_model.compile(loss="categorical_crossentropy",
+              optimizer=optimizer,
+              metrics=["categorical_accuracy"]) 
+
+#define callback functions
+  
+  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_notsaved.h5",
+                                    lstm_model, model_save_dir+"lstm_stateful_model.h5")
+  history = History()
+  callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+               #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
+               #save_best_only=True),
+               history,
+               saveCNN_Model]
+ #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
+ 
   
 
-for i in range(0,len(train_videos)):
-  train_video = [train_videos[i]]
-  test_video = [test_videos[i]]
-  lstm_model, history =  train_stateful_lstm(lstm_model, train_video, test_video, callbacks)
+  train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks)
 
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
 
+  history_dict = {}
+  history_dict['val_loss'] = history.val_loss
+  history_dict['train_loss'] = history.train_loss
+  history_dict['train_acc'] = history.train_acc
+  history_dict['val_acc'] = history.val_acc
 
-#dump history
-#json.dump(history.history, open(history_dir+'model_history', 'w'))
-with open(history_dir+'lstm_model_history', 'wb') as file_pi:
-        pickle.dump(history, file_pi)
+  with open(history_dir+'lstm_model_history', 'wb') as file_pi:
+        pickle.dump(history_dict, file_pi)
         
 #save model and clear session
-del lstm_model
-tensorflow.keras.backend.clear_session()
+  del lstm_model, cnn_model
+  tensorflow.keras.backend.clear_session()
+
+  
