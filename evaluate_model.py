@@ -26,6 +26,7 @@ parser.add_argument('--frames', default=25,
 parser.add_argument('--batch_size', default=8,
                             help="batch size")
 
+eval_videos =  ['video73', 'video77', 'video78', 'video79','video80'] 
 
 args = parser.parse_args()
 
@@ -70,43 +71,51 @@ lstm_model.compile(loss="categorical_crossentropy",
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-validation_samples = generate_feature_eval_list(eval_image_dir, eval_label_dir)
-validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-validation_len = (validation_len-2)*BATCH_SIZE*frames
-validation_samples = validation_samples[0:validation_len]
-print ("Validatation Length:{0}".format(validation_len))
-
 #define callback functions
 #OuputImageCallback = CustomImageCallback( validation_generator, log_dir = './logs/Graph')
 
-model_callbacks = [TensorBoard(log_dir='./logs/Graph', histogram_freq=5, write_graph=True, write_images=True, write_grads=True)]
+model_callbacks = [TensorBoard(log_dir='./logs/Graph', histogram_freq=5, write_graph=True, write_images=False, write_grads=True)]
 lstm_model.summary()
 
-# load data and predict
+def join_results(a, b):
+    if a is None:
+        a = b
+    else:
+        a = np.concatenate((a, b))
+    return a
+
+def evaluate_model(model, validation_samples):
+    # load data and predict
+    y = None
+    yhat = None
+    num_batches = int(len(validation_samples)/(BATCH_SIZE*frames))
+    print("Input count: {0}, Batch count: {1}".format(len(validation_samples), num_batches))
+    
+    validation_generator = generator_eval(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
+    steps = 0
+    for x_batch, y_batch in validation_generator:
+        steps+=1
+        print("Batch# {0}, Input shape {1}, X-Length {2}, gt shape {3}, Y-Length {4}".format(steps, np.shape(x_batch),len(x_batch[0]), np.shape(y_batch), len(y_batch)))
+        y = join_results(y, y_batch)
+      # loss = lstm_model.evaluate_generator(validation_generator, steps=int(len(validation_samples)/(BATCH_SIZE*frames)), max_queue_size=10, workers=1, use_multiprocessing=False, verbose=1)
+        pred_batch = lstm_model.predict(x = x_batch, verbose=1)
+        print(np.shape(pred_batch)) 
+        yhat = join_results(yhat, pred_batch)
+        #yhat.append(pred_batch)
+        if steps >= num_batches: break
+    return y, yhat
+
 y = None
 yhat = None
-num_batches = int(len(validation_samples)/(BATCH_SIZE*frames))
-print("Input count: {0}, Batch count: {1}".format(len(validation_samples), num_batches))
-
-validation_generator = generator_eval(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=frames, shuffle=False)
-steps = 0
-for x_batch, y_batch in validation_generator:
-    steps+=1
-    print("Batch# {0}, Input shape {1}, X-Length {2}, gt shape {3}, Y-Length {4}".format(steps, np.shape(x_batch),len(x_batch[0]), np.shape(y_batch), len(y_batch)))
-    if y is None:
-        y = y_batch
-    else: 
-        y = np.concatenate((y, y_batch))
-
-    # loss = lstm_model.evaluate_generator(validation_generator, steps=int(len(validation_samples)/(BATCH_SIZE*frames)), max_queue_size=10, workers=1, use_multiprocessing=False, verbose=1)
-    pred_batch = lstm_model.predict(x = x_batch, verbose=1)
-    print(np.shape(pred_batch)) 
-    if yhat is None:
-        yhat = pred_batch
-    else:
-        yhat = np.concatenate((yhat, pred_batch))
-    #yhat.append(pred_batch)
-    if steps >= num_batches: break
+for video in eval_videos:
+    validation_samples = generate_feature_eval_list(eval_image_dir, eval_label_dir, [video])
+    validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
+    validation_len = (validation_len-2)*BATCH_SIZE*frames
+    validation_samples = validation_samples[0:validation_len]
+    print ("Validatation Length:{0}".format(validation_len))
+    yi, yhati = evaluate_model(lstm_model, validation_samples)
+    y = join_results(y, yi)
+    yhat = join_results(yhat, yhati)
 
 yhat = np.argmax(yhat, axis=1)
 y =  np.argmax(y, axis=1)

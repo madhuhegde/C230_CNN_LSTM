@@ -144,37 +144,32 @@ def generate_feature_test_list(image_dir, label_dir, video_files):
   return(feature_list)
 
   
-def generate_feature_eval_list(image_dir, label_dir):
-
+def generate_feature_eval_list(image_dir, label_dir, video_files):
   
-  label_files = glob.glob(label_dir+"video*.txt")
-
+  label_files =  video_files
+  #print(label_files)
   feature_list = list()
   
-
   for label_file in label_files:
-    #print(label_file)  
-    with open(label_file) as handle:
+    label_file_name = label_dir+label_file+'-label.txt'
+    #print(label_file_name)  
+    
+    with open(label_file_name) as handle:
       #Read extra line that says Frames Phases
       handle.readline()
       labels = handle.readlines()
-      
-    #print(len(labels))
-    label_file_name = label_file.split('/')[-1].strip()
-      
-    image_folder = label_file_name.replace('-label.txt', '')
-    
+   
     #print(len(image_files))
     local_image_files = list()
     for label in labels:
       label_split = label.split('\t')
       index = str(int(label_split[0])+1)
      
-      image_file = image_folder+'-'+index+'.jpg'
+      image_file = label_file+'-'+index+'.jpg'
 
-      local_image_files.append(image_folder+'/'+image_file)
+      local_image_files.append(label_file+'/'+image_file)
       
     #print(len(local_image_files), len(labels))
     feature_list.extend([local_image_files[i], labels[i]] for i in range(len(labels)))
-  
+    
   return(feature_list)
