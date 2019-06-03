@@ -56,7 +56,7 @@ columns = 224
 
 #training parameters
 BATCH_SIZE = 8# Need GPU with 32 GB RAM for BATCH_SIZE > 16
-nb_epochs = 1 # 
+nb_epochs = 3 # 
 
 class_weights = [2,2,1,2,2,1,1]
 
@@ -134,7 +134,7 @@ def train_stateful_lstm(lstm_model, train_videos, test_videos, callbacks):
             validation_steps=int(len(validation_samples)/(BATCH_SIZE*frames)), 
             class_weight = class_weights,
             callbacks = callbacks,
-            epochs=1, verbose=1)
+            epochs=nb_epochs, verbose=1)
   
   
   return    

@@ -42,7 +42,7 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
+test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36','video40']
 aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
                'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
 	           'video67', 'video72']
@@ -226,7 +226,7 @@ if __name__ == "__main__":
   lstm_model.summary()
 
   #Similar to Adam
-  optimizer = Nadam(lr=0.00005,
+  optimizer = Nadam(lr=0.00001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
