@@ -38,8 +38,14 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-train_videos = ['video01']
-test_videos = ['video03']
+train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
+                'video15', video17']
+				
+aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
+                'video53', video60', 'video61', 'video65']		
+				
+test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
+               'video44', 'video45', 'video47', 'video55', 'video57']
 
 
 
@@ -162,6 +168,10 @@ if __name__ == "__main__":
 
 
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  aug_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
+  print(len(train_samples), len(aug_samples))
+  train_samples.extend(aug_samples)
+  print(len(train_samples))
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   #validation_samples = validation_samples[0:60*32*5]
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
