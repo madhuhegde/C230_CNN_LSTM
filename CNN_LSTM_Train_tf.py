@@ -21,6 +21,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 from sklearn.utils import class_weight
+from tensorflow.keras.models import load_model
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
@@ -42,7 +43,7 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36','video40']
+test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
 aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
                'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
 	           'video67', 'video72']
@@ -121,7 +122,17 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 def get_available_gpus():
         local_device_protos = device_lib.list_local_devices()
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
-        
+
+def get_VGG16_model():
+
+  #load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'vgg16_model.h5')
+
+  #freeze cnn weights for stateful LSTM
+  for layer in cnn_model.layers[:-15]:
+    layer.trainable = False        
+    
+  return(cnn_model)  
         
 def get_VGG16_base():
 
@@ -183,12 +194,14 @@ def get_stacked_LSTM_model(input, base_model):
 # Function pointers for models
   
 cnn_func_ptr = {
+ 'VGG16_SPLIT_LSTM' : get_VGG16_model,
  'VGG16_NORM_LSTM' : get_VGG16_base,
  'VGG16_STACKED_LSTM' : get_VGG16_base
  
 }     
   
 lstm_func_ptr = {
+ 'VGG16_SPLIT_LSTM' : get_LSTM_model,
  'VGG16_NORM_LSTM' : get_LSTM_model,
  'VGG16_STACKED_LSTM' : get_stacked_LSTM_model
  
@@ -226,7 +239,7 @@ if __name__ == "__main__":
   lstm_model.summary()
 
   #Similar to Adam
-  optimizer = Nadam(lr=0.00001,
+  optimizer = Nadam(lr=0.00005,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
