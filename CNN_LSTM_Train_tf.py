@@ -50,6 +50,14 @@ aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',
 
 train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video64'] 
 
+train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
+                'video15', video17']
+				
+aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
+                'video53', video60', 'video61', 'video65']		
+				
+test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
+               'video44', 'video45', 'video47', 'video55', 'video57']
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -128,8 +136,8 @@ def get_VGG16_model():
   #load pre-trained cnn model
   cnn_model = load_model(model_save_dir+'vgg16_model.h5')
 
-  #freeze cnn weights for stateful LSTM
-  for layer in cnn_model.layers[:-15]:
+  #freeze cnn weights for LSTM training
+  for layer in cnn_model.layers:
     layer.trainable = False        
     
   return(cnn_model)  
@@ -239,7 +247,7 @@ if __name__ == "__main__":
   lstm_model.summary()
 
   #Similar to Adam
-  optimizer = Nadam(lr=0.00005,
+  optimizer = Nadam(lr=0.00001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -273,8 +281,8 @@ if __name__ == "__main__":
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
-  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
-                                    l_model, model_save_dir+"lstm_model.h5")
+  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_notused.h5",
+                                    l_model, model_save_dir+"vgg15_split_lstm_model.h5")
 
   #define callback functions
   history = History()
@@ -310,7 +318,7 @@ if __name__ == "__main__":
   history_dict['val_acc'] = history.val_acc
 
   #json.dump(history.history, open(history_dir+'model_history', 'w'))
-  with open(history_dir+'model_history', 'wb') as file_pi:
+  with open(history_dir+'vgg16_split_lstm_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
 #print(history.val_acc)
