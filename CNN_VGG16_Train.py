@@ -39,10 +39,10 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
-                'video15', video17']
+                'video15', 'video17']
 				
 aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
-                'video53', video60', 'video61', 'video65']		
+                'video53', 'video60', 'video61', 'video65']		
 				
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
