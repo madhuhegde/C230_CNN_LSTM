@@ -3,7 +3,7 @@ import os
 import time
 import random
 from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_augment_list
 import tensorflow
 import matplotlib
 import json, pickle
