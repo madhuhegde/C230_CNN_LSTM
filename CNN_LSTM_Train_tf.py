@@ -51,10 +51,10 @@ aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',
 train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video64'] 
 
 train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
-                'video15', video17']
+                'video15', 'video17']
 				
 aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
-                'video53', video60', 'video61', 'video65']		
+                'video53', 'video60', 'video61', 'video65']		
 				
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
@@ -67,7 +67,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
+frames = 15    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
