@@ -24,7 +24,7 @@ from sklearn.utils import class_weight
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
-from CNN_LSTM_split_data import generate_feature_augment_list
+from CNN_LSTM_split_data import generate_feature_augment_list, remove_transition_samples
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -42,12 +42,12 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video04',  'video12', 'video17', 'video21','video24', 'video36', 'video40']
-aug_videos = ['video01', 'video02','video17', 'video25', 'video30', 'video32',  'video34', 'video37', 'video39', 
-              'video42', 'video43',  'video45', 'video48', 'video57','video67','video69','video65', 'video71',  
-              'video60','video31','video51']
+test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
+aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
+               'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
+	           'video67', 'video72']
 
-train_videos =  ['video05', 'video08', 'video09', 'video10', 'video12','video14','video65']
+train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video64'] 
 
 
 # 7 phases for surgical operation
@@ -242,8 +242,16 @@ if __name__ == "__main__":
   print(len(train_samples), len(aug_samples))
   train_samples.extend(aug_samples)
   print(len(train_samples))
+  
+  train_samples = remove_transition_samples(train_samples, frames)
+  print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
+  
+  class_weights = [2,2,1,2,2,1,1]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
+  
+  validation_samples = remove_transition_samples(validation_samples, frames)
+  
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]
