@@ -75,8 +75,8 @@ class History(tensorflow.keras.callbacks.Callback):
     def on_batch_end(self, batch, logs={}):
         self.train_loss.append(logs.get('loss'))
         self.train_acc.append(logs.get('categorical_accuracy'))
-        
-    def on_epoch_end(self, batch, logs={}):    
+    #Store val_acc/loss per batch    
+    #def on_epoch_end(self, batch, logs={}):    
         self.val_acc.append(logs.get('val_categorical_accuracy'))
         self.val_loss.append(logs.get('val_loss'))
         
