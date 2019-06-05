@@ -3,7 +3,7 @@ import os
 import time
 import random
 from CNN_LSTM_load_data import  generator_CNN_train, generator_CNN_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_augment_list
 import tensorflow
 import matplotlib
 import json, pickle
@@ -38,8 +38,14 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-train_videos = ['video01']
-test_videos = ['video03']
+train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
+                'video15', 'video17']
+				
+aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
+                'video53', 'video60', 'video61', 'video65']		
+				
+test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
+               'video44', 'video45', 'video47', 'video55', 'video57']
 
 
 
@@ -69,8 +75,8 @@ class History(tensorflow.keras.callbacks.Callback):
     def on_batch_end(self, batch, logs={}):
         self.train_loss.append(logs.get('loss'))
         self.train_acc.append(logs.get('categorical_accuracy'))
-        
-    def on_epoch_end(self, batch, logs={}):    
+    #Store val_acc/loss per batch    
+    #def on_epoch_end(self, batch, logs={}):    
         self.val_acc.append(logs.get('val_categorical_accuracy'))
         self.val_loss.append(logs.get('val_loss'))
         
@@ -162,6 +168,10 @@ if __name__ == "__main__":
 
 
   train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  aug_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
+  print(len(train_samples), len(aug_samples))
+  train_samples.extend(aug_samples)
+  print(len(train_samples))
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   #validation_samples = validation_samples[0:60*32*5]
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))

@@ -21,6 +21,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 from sklearn.utils import class_weight
+from tensorflow.keras.models import load_model
 
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
@@ -58,7 +59,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
+frames = 15    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
@@ -94,7 +95,7 @@ class History(tensorflow.keras.callbacks.Callback):
         self.train_loss.append(logs.get('loss'))
         self.train_acc.append(logs.get('categorical_accuracy'))
         
-    def on_epoch_end(self, batch, logs={}):    
+    #def on_epoch_end(self, batch, logs={}):    
         self.val_acc.append(logs.get('val_categorical_accuracy'))
         self.val_loss.append(logs.get('val_loss'))
         
@@ -121,7 +122,17 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 def get_available_gpus():
         local_device_protos = device_lib.list_local_devices()
         return [x.name for x in local_device_protos if x.device_type == 'GPU']
-        
+
+def get_VGG16_model():
+
+  #load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'vgg16_model.h5')
+
+  #freeze cnn weights for LSTM training
+  for layer in cnn_model.layers:
+    layer.trainable = False        
+    
+  return(cnn_model)  
         
 def get_VGG16_base():
 
@@ -183,12 +194,14 @@ def get_stacked_LSTM_model(input, base_model):
 # Function pointers for models
   
 cnn_func_ptr = {
+ 'VGG16_SPLIT_LSTM' : get_VGG16_model,
  'VGG16_NORM_LSTM' : get_VGG16_base,
  'VGG16_STACKED_LSTM' : get_VGG16_base
  
 }     
   
 lstm_func_ptr = {
+ 'VGG16_SPLIT_LSTM' : get_LSTM_model,
  'VGG16_NORM_LSTM' : get_LSTM_model,
  'VGG16_STACKED_LSTM' : get_stacked_LSTM_model
  
@@ -247,7 +260,7 @@ if __name__ == "__main__":
   print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
   
-  class_weights = [2,2,1,2,2,1,1]
+  class_weights = [2,1,2,1,2,3,5]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)
@@ -297,7 +310,7 @@ if __name__ == "__main__":
   history_dict['val_acc'] = history.val_acc
 
   #json.dump(history.history, open(history_dir+'model_history', 'w'))
-  with open(history_dir+'model_history', 'wb') as file_pi:
+  with open(history_dir+'cnn_lstm_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
 #print(history.val_acc)
