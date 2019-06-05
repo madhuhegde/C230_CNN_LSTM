@@ -44,6 +44,9 @@ class_labels = ["Preparation", "CalotTriangleDissection", "ClippingCutting",
 class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}           
 
+
+num_classes = 7
+
 # Dimensions of input feature 
 frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
