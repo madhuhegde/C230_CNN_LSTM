@@ -58,6 +58,13 @@ aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', '
 				
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
+			   
+test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
+aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
+               'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
+	           'video67', 'video72']
+
+train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video41', 'video61', 'video64'] 			   
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -72,7 +79,7 @@ channels = 3  #RGB
 rows = 224    
 columns = 224 
 BATCH_SIZE = 8
-nb_epochs = 24
+nb_epochs = 10
 
 
 # Compute class_weights for imbalanced train set
@@ -268,7 +275,7 @@ if __name__ == "__main__":
   print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
   
-  class_weights = [2,2,1,2,2,1,1]
+  class_weights = [2,1,2,1,2,3,5]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)
@@ -281,8 +288,8 @@ if __name__ == "__main__":
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
-  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_notused.h5",
-                                    l_model, model_save_dir+"vgg15_split_lstm_model.h5")
+  saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model.h5",
+                                    l_model, model_save_dir+"lstm_model.h5")
 
   #define callback functions
   history = History()
@@ -318,7 +325,7 @@ if __name__ == "__main__":
   history_dict['val_acc'] = history.val_acc
 
   #json.dump(history.history, open(history_dir+'model_history', 'w'))
-  with open(history_dir+'vgg16_split_lstm_history', 'wb') as file_pi:
+  with open(history_dir+'cnn_lstm_history', 'wb') as file_pi:
         pickle.dump(history_dict, file_pi)
         
 #print(history.val_acc)
