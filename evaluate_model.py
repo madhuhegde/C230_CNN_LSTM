@@ -25,6 +25,7 @@ import pickle
 eval_videos = [['video12'],['video73'], ['video77'], ['video78'], ['video04']]
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
+model_save_dir = config["model_save_dir"]
 history_dir = config["history_dir"]
 
 base_image_dir = base_dir+"images/"
