@@ -21,8 +21,8 @@ from CNN_LSTM_split_data import remove_transition_samples
 from surgical_flow_model import initialize_trans_matrix, predict_next_label
 import pickle
 
-eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
-
+#eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
+eval_videos = [['video12'],['video73'], ['video77'], ['video78'], ['video04']]
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 history_dir = config["history_dir"]
@@ -44,7 +44,7 @@ class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutt
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}           
 
 # Dimensions of input feature 
-frames = 25 #args.frames    #Number of frames over which LSTM prediction happens
+frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
@@ -57,7 +57,7 @@ def evaluate_model(lstm_model, eval_videos, callbacks):
   
   validation_samples = generate_feature_test_list(eval_image_dir, eval_label_dir, eval_videos)
   #validation_samples = remove_transition_samples(validation_samples, frames)
-  validation_len = 4 #int(len(validation_samples)/(BATCH_SIZE*frames))
+  validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
   validation_len = (validation_len-2)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
   print ("Validatation Length:{0}".format(validation_len))
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         
 
 # Dimensions of input feature 
-  frames = args.frames    #Number of frames over which LSTM prediction happens
+  frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
 
   BATCH_SIZE = args.batch_size 
 
@@ -127,7 +127,8 @@ if __name__ == "__main__":
   callbacks = []
   y = []
   yhat = []
-  
+  y_labels = []
+  yhat_labels = []
   
   for i in range(len(eval_videos)):
      eval_video = eval_videos[i]
@@ -135,7 +136,10 @@ if __name__ == "__main__":
      [y_video, yhat_video] = evaluate_model(lstm_model, eval_video, callbacks)
      y.extend(y_video)
      yhat.extend(yhat_video)
-
+     y1 = [class_labels[j] for j in y_video]
+     y2 = [class_labels[j] for j in yhat_video]
+     y_labels.append(y1)
+     yhat_labels.append(y2)
  # predfile = open('./logs/predictions_Yhat.txt', 'wt')
  # predfile.write('\r\n'.join(str(p).strip() for p in yhat))
   #predfile.close()
@@ -148,12 +152,8 @@ if __name__ == "__main__":
   #gtfile.write('\r\n'.join(str(s) for s in y))
   #gtfile.close()
 
-  ytrue_labels = [class_labels[i] for i in y]
-  yhat_labels = [class_labels[i] for i in yhat]
-
-  #yhat_pred = predict_next_label(yhat_labels)
   #yhat = [class_labels_dict[i] for i in yhat_pred]
-  y_save = [ytrue_labels, yhat_labels]
+  y_save = [y_labels, yhat_labels]
   with open('label_history', 'wb') as file_pi:
         pickle.dump(y_save, file_pi)
 
