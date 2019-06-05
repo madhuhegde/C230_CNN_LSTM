@@ -43,12 +43,6 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
-aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
-               'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
-	           'video67', 'video72']
-
-train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video64'] 
 
 train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
                 'video15', 'video17']
@@ -59,7 +53,7 @@ aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', '
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
 			   
-test_videos = ['video04',  'video12', 'video13', 'video17', 'video24', 'video36', 'video40']
+test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video36', 'video40', 'video44']
 aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
                'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
 	           'video67', 'video72']
@@ -293,7 +287,7 @@ if __name__ == "__main__":
 
   #define callback functions
   history = History()
-  callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
+  callbacks = [EarlyStopping(monitor='val_categorical_accuracy', patience=3, verbose=2),
                #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
                #save_best_only=True),
                history,
