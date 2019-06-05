@@ -117,12 +117,47 @@ if __name__ == "__main__":
   BATCH_SIZE = args.batch_size 
 
   #initialize_trans_matrix()
+#Define Input with batch_shape to train stateful LSTM  
+  video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
+#load lstm_model with shuffled data
+  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  lstm_weights = list()
+
+#load pretrained weights
+  for layer in prev_lstm_model.layers:
+    weights = layer.get_weights()
+    lstm_weights.append(weights)
+
+# print summary and clear model    
+  prev_lstm_model.summary
+  del prev_lstm_model
+
+#load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'cnn_model.h5')
+
+#freeze cnn weights for stateful LSTM
+  for layer in cnn_model.layers:
+    layer.trainable = False
+
+  encoded_frames = TimeDistributed(cnn_model)(video)
+  encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
+
+# RELU or tanh?
+  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+#hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
+
+  dropout_layer = Dropout(rate=0.5)(hidden_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
+  lstm_model = Model(video, outputs)
+
+  for i in range(len(lstm_model.layers)):
+     lstm_model.layers[i].set_weights(lstm_weights[i])
 
 
 # load weights into new model
   print("Loading model from {0}".format(args.model))
-  lstm_model = load_model(args.model)
+  #lstm_model = load_model(args.model)
   lstm_model.summary()
   callbacks = []
   y = []
