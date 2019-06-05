@@ -269,7 +269,7 @@ if __name__ == "__main__":
   print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
   
-  class_weights = [2,1,2,1,2,3,5]
+  class_weights = [2,1,3,1,3,3,5]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)
