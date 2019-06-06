@@ -23,7 +23,7 @@ from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list,  remove_transition_samples
 
-train_videos = ['video28','video41', 'video46', 'video47']
+train_videos = [['video28'],['video41'], ['video46'], ['video47']]
 test_videos = ['video49']
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -178,7 +178,7 @@ if __name__=="__main__":
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
   l_model = Model(video, outputs)
 
-  for i in range(len(lstm_model.layers)):
+  for i in range(len(l_model.layers)):
     l_model.layers[i].set_weights(lstm_weights[i])
 
   lstm_model = l_model
@@ -209,8 +209,9 @@ if __name__=="__main__":
  #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
  
   
-
-  train_stateful_lstm(train_videos, test_videos, callbacks)
+  for train_video in train_videos:
+    train_stateful_lstm(train_video, test_videos, callbacks)
+    lstm_model.reset_states()
 
 #history.key() = ['loss', 'categorical_accuracy', 'val_loss', 'val_categorical_accuracy'])
 
