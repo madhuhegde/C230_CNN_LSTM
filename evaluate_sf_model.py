@@ -54,18 +54,6 @@ rows = 224
 columns = 224 
 BATCH_SIZE = 8 #args.batch_size
 
-def predict_next_label(new_labels):
-    out_labels = list()
-    prev_label = "Preparation"
-    label_history = "Preparation"
-    for label in new_labels:
-        if (label_history == label): # and (history[1]==new_label)): # and (history[2]==new_label)):
-            if(prev_label != label):
-                prev_label = label
-        label_history = label
-        out_labels.append(prev_label)
-        
-    return out_labels
 
 
 # return y, yhat
@@ -128,13 +116,13 @@ if __name__ == "__main__":
         
 
 # Dimensions of input feature 
-  frames = #args.frames    #Number of frames over which LSTM prediction happens
+  frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
 
   BATCH_SIZE = args.batch_size 
 
   #initialize_trans_matrix()
 #Define Input with batch_shape to train stateful LSTM  
-  video = Input(shape=(frames,rows,columns,channels))
+  video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
 
 #load lstm_model with shuffled data
   prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
@@ -157,7 +145,7 @@ if __name__ == "__main__":
     layer.trainable = False
 
   encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
   hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
@@ -190,8 +178,6 @@ if __name__ == "__main__":
      y1 = [class_labels[j] for j in y_video]
      y2 = [class_labels[j] for j in yhat_video]
      y_labels.append(y1)
-     
-     y2 = predict_next_label(y2)
      yhat_labels.append(y2)
  # predfile = open('./logs/predictions_Yhat.txt', 'wt')
  # predfile.write('\r\n'.join(str(p).strip() for p in yhat))
