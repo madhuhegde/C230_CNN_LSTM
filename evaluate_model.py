@@ -22,7 +22,7 @@ from surgical_flow_model import initialize_trans_matrix, predict_next_label
 import pickle
 
 #eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
-eval_videos = [['video12'],['video73'], ['video77'], ['video78'], ['video04']]
+eval_videos = [['video12'],['video80'], ['video77'], ['video78'], ['video04']]
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 model_save_dir = config["model_save_dir"]
@@ -160,7 +160,7 @@ if __name__ == "__main__":
   encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
-  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+  hidden_layer = Dense(units=2048,  activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
 
   dropout_layer = Dropout(rate=0.5)(hidden_layer)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
 
 # load weights into new model
-  print("Loading model from {0}".format(args.model))
+  #print("Loading model from {0}".format(args.model))
   #lstm_model = load_model(args.model)
   lstm_model.summary()
   callbacks = []
