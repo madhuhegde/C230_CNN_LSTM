@@ -47,6 +47,12 @@ aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', '
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
 
+test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video36', 'video40', 'video44']
+aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
+               'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
+	           'video67', 'video72']
+
+train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video41', 'video61', 'video64'] 			   
 
 
 # 7 phases for surgical operation
