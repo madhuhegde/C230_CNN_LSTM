@@ -1,6 +1,6 @@
 {
-	  "base_dir": "/home/madhu_hegde/cs230/data/cholec_mini_data/",
-	  "model_save_dir": "/home/madhu_hegde/cs230/data/",
-	  "history_dir": "/home/madhu_hegde/cs230/data/",
+	  "base_dir": "/usr/local/LSTM-KTH/cholec80/",
+	  "model_save_dir": "/usr/local/LSTM-KTH/C230_CNN_LSTM/",
+	  "history_dir": "/usr/local/LSTM-KTH/C230_CNN_LSTM/",
 	  "model_type" : "VGG16_NORM_LSTM"
 }

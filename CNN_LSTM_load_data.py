@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import random
 import json
+import test_frcnn as tf
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 base_image_dir = base_dir +"images/"
@@ -104,7 +105,7 @@ def generator_test(samples, batch_size=32, frames_per_clip=4, shuffle=False):
             classes_one_hot[np.arange(len(phases)), phases] = 1  
             y_batch = classes_one_hot
             yield (X_batch, y_batch)   
-            
+            #return images
             
             
             
@@ -122,6 +123,7 @@ def generator_CNN_train(samples, batch_size=32, frames_per_clip=1, shuffle=True)
 
             images = []
             phases = []
+            image_tool = []
             for i in range(batch_size):
               # Read only one label for each frames_per_clip
               batch_sample = batch_samples[i]
@@ -130,19 +132,22 @@ def generator_CNN_train(samples, batch_size=32, frames_per_clip=1, shuffle=True)
               phases.append(phase)
               image_file = train_image_dir+batch_sample[0]
               image = cv2.imread(image_file)
+              image_tool.append(image)
               image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
-                
+              print ("Number of images:",i) 
               #image = (image-128.0)/128.0;
               image = image/255.0
               images.append(image)
                
         
+            print ("Length of tool:", len(image_tool))
+            tf.tool_predict(image_tool, 1)
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
             classes_one_hot[np.arange(len(phases)), phases] = 1  
             y_batch = classes_one_hot
-            yield (X_batch, y_batch)   
-            
+            yield (X_batch, y_batch, image_tool)   
+            #return images
             
 def generator_CNN_test(samples, batch_size=32, frames_per_clip=1, shuffle=False):
     num_samples = len(samples)
@@ -187,6 +192,7 @@ def generator_eval(samples, batch_size=32, frames_per_clip=4, shuffle=False):
 
             images = []
             phases = []
+            image_tool = []
             for i in range(batch_size):
               # Read only one label for each frames_per_clip
               batch_sample = batch_samples[frames_per_clip*i]
@@ -202,6 +208,7 @@ def generator_eval(samples, batch_size=32, frames_per_clip=4, shuffle=False):
                 image_file = eval_image_dir+batch_sample[0]
                 
                 image = cv2.imread(image_file)
+                image_tool.append(image)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
                 #image = (image-128.0)/128.0;
                 image = image/255.0
@@ -210,9 +217,9 @@ def generator_eval(samples, batch_size=32, frames_per_clip=4, shuffle=False):
                 
               images.append(consecutive_images)
                
-        
+            #list_tool=tf.tool_predict(image_tool, 1)
             X_batch = np.array(images)
             classes_one_hot = np.zeros((len(phases), len(class_labels)))
             classes_one_hot[np.arange(len(phases)), phases] = 1  
             y_batch = classes_one_hot
-            yield (X_batch, y_batch)             
+            yield (X_batch, y_batch,image_tool)             

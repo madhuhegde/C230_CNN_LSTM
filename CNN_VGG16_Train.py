@@ -23,7 +23,7 @@ from tensorflow.keras.optimizers import Nadam, Adam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
-
+import test_frcnn as tool_dict
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 config = json.load(open('config/config.json'))
@@ -39,7 +39,7 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 train_videos = ['video01']
-test_videos = ['video03']
+test_videos = ['video04']
 
 
 
@@ -186,8 +186,16 @@ if __name__ == "__main__":
 
   # load training data
   train_generator = generator_CNN_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=True)
+  for i in range(1,10):
+    a , b, c =next(train_generator)
+    #print ("Variable C:", c)
+  #images = generator_CNN_train(train_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=True)
   validation_generator = generator_CNN_test(validation_samples, batch_size=BATCH_SIZE, frames_per_clip=1, shuffle=False)
-
+  #tool_dict.tool_predict(images, int(len(train_samples)/(BATCH_SIZE*frames)))
+  #tool_dict.tool_predict(train_generator, int(len(train_samples)/(BATCH_SIZE*frames)))
+  #X = next(train_generator)
+  #print ("X shape:",X.shape())
+  '''
   gpu_model.fit_generator(train_generator, 
             steps_per_epoch=int(len(train_samples)/(BATCH_SIZE*frames)), 
             validation_data=validation_generator, 
@@ -220,4 +228,4 @@ if __name__ == "__main__":
   tensorflow.keras.backend.clear_session()
 
 
-
+'''

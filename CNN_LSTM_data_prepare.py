@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/Users/madhuhegde/work/cs230/data/more_data/"
+base_dir = "/usr/local/LSTM-KTH/cholec80/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"
@@ -81,9 +81,9 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
   
   
 if __name__ == "__main__":
-     num_train_videos = 40
-     num_test_videos = 10
-     num_eval_videos = 4
+     num_train_videos = 27
+     num_test_videos = 7
+     num_eval_videos = 7
      target_fps = 5
      train_video_path = video_base_dir+"train/"
      test_video_path = video_base_dir+"test/"
@@ -95,7 +95,7 @@ if __name__ == "__main__":
      test_labels_path = label_base_dir+"test/"
      eval_labels_path = label_base_dir+"eval/"
      
-     train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
-     test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
+     #train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
+     #test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
      eval_num = process_videos(eval_video_path, eval_images_path, eval_labels_path, num_eval_videos, target_fps)
 
