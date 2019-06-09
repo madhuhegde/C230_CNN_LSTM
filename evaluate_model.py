@@ -47,6 +47,11 @@ eval_label_dir = base_label_dir + "eval/"
 # 7 phases for surgical operation
 class_labels = ["Preparation", "CalotTriangleDissection", "ClippingCutting", 
            "GallbladderDissection", "GallbladderPackaging", "CleaningCoagulation", "GallbladderRetraction"]
+           
+class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}           
+
+           
 
 # Dimensions of input feature 
 frames = args.frames    #Number of frames over which LSTM prediction happens
@@ -76,6 +81,19 @@ lstm_model.compile(loss="categorical_crossentropy",
 
 model_callbacks = [TensorBoard(log_dir='./logs/Graph', histogram_freq=5, write_graph=True, write_images=False, write_grads=True)]
 lstm_model.summary()
+
+def predict_next_label(new_labels):
+    out_labels = list()
+    prev_label = "Preparation"
+    label_history = "Preparation"
+    for label in new_labels:
+        if (label_history == label): # and (history[1]==new_label)): # and (history[2]==new_label)):
+            if(prev_label != label):
+                prev_label = label
+        label_history = label
+        out_labels.append(prev_label)
+        
+    return out_labels
 
 def join_results(a, b):
     if a is None:
@@ -114,11 +132,20 @@ for video in eval_videos:
     validation_samples = validation_samples[0:validation_len]
     print ("Validatation Length:{0}".format(validation_len))
     yi, yhati = evaluate_model(lstm_model, validation_samples)
+    
+    yi = np.argmax(yi, axis=1)
+    yhati = np.argmax(yhati, axis=1)
+    
+    y2 = [class_labels[j] for j in yhati]
+    y2 = predict_next_label(y2)
+    
+    yhati = [class_labels_dict[j] for j in y2]
+    
     y = join_results(y, yi)
     yhat = join_results(yhat, yhati)
 
-yhat = np.argmax(yhat, axis=1)
-y =  np.argmax(y, axis=1)
+#yhat = np.argmax(yhat, axis=1)
+#y =  np.argmax(y, axis=1)
 
 predfile = open('./logs/predictions_Yhat.txt', 'wt')
 predfile.write('\r\n'.join(str(p).strip() for p in yhat))
