@@ -29,12 +29,23 @@ def generate_gt_data(in_file, fps):
   #generate 
   out_list = []
   step = int(25/fps)
+  rem = 25 - step*fps
+  
   with open(in_file, 'r') as handle:
     out_list.append(handle.readline())
+    linecount = 0
     for lineno, line in enumerate(handle):
-        if lineno % step == 0:
+        if(rem>0) and (lineno % 25 == 0):
+            for k in range(rem):
+              continue
+            #print("skip "+str(lineno)+"\n")
+        else:    
+          if lineno % step == 0:
+            #print("in "+str(lineno)+"\n")
+            linecount = linecount + 1
             templine = line.split('\t')
-            templine = str(int(int(templine[0])/step))+'\t'+templine[1]
+            #templine = str(int(int(templine[0])/step))+'\t'+templine[1]
+            templine = str(linecount) +'\t'+templine[1]
             out_list.append(templine)
                       
   return(out_list)
@@ -45,6 +56,10 @@ def generate_gt_data(in_file, fps):
 def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
 
   video_files = glob.glob(video_dir+"*.mp4")
+  print(video_dir)
+  print(len(video_files))
+  video_num = 0
+  
   
   for video_num, video_file in enumerate(video_files):
      file_name = video_file.split('/')[-1]
@@ -58,7 +73,7 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
      
      #extract images from videos
      
-     extract_images(video_file, image_folder_name, target_fps)
+     #extract_images(video_file, image_folder_name, target_fps)
      
      #resize images to 250 x 250. Currently hardcoded to 250 x 250.
      #existing images are overwritten
@@ -84,8 +99,8 @@ if __name__ == "__main__":
      num_train_videos = 40
      num_test_videos = 10
      num_eval_videos = 4
-     target_fps = 5
-     train_video_path = video_base_dir+"train/"
+     target_fps = 2
+     train_video_path = video_base_dir #+"train/"
      test_video_path = video_base_dir+"test/"
      eval_video_path = video_base_dir+"eval/"
      train_images_path = image_base_dir+"train/"
@@ -96,6 +111,6 @@ if __name__ == "__main__":
      eval_labels_path = label_base_dir+"eval/"
      
      train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
-     test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
-     eval_num = process_videos(eval_video_path, eval_images_path, eval_labels_path, num_eval_videos, target_fps)
+     #test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
+     #eval_num = process_videos(eval_video_path, eval_images_path, eval_labels_path, num_eval_videos, target_fps)
 
