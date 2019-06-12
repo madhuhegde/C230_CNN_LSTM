@@ -22,7 +22,7 @@ from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 from sklearn.utils import class_weight
 from tensorflow.keras.models import load_model
-
+from tensorflow.keras import regularizers
 from CNN_LSTM_load_data import  generator_train, generator_test
 from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
 from CNN_LSTM_split_data import generate_feature_augment_list, remove_transition_samples
@@ -53,12 +53,13 @@ aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', '
 test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
                'video44', 'video45', 'video47', 'video55', 'video57']
 			   
-test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video36', 'video40', 'video44']
-aug_videos = ['video01', 'video02', 'video16',  'video25', 'video30', 'video31',  'video34', 'video37', 'video39',
-               'video42', 'video43',  'video45', 'video48', 'video51', 'video52', 'video57',  'video60', 'video66',  
+test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27', 'video36', 'video40', 'video44','video49']
+aug_videos = ['video11', 'video15',  'video18', 'video21', 'video22', 'video23', 'video26',
+               'video25', 'video28', 'video30', 'video31',  'video34', 'video35', 'video37', 'video39',
+               'video42', 'video43',  'video45', 'video48', 'video50', 'video51', 'video52', 'video57',  'video60', 'video66',  
 	           'video67', 'video72']
 
-train_videos =  ['video05', 'video08', 'video09', 'video12','video14', 'video41', 'video61', 'video64'] 			   
+train_videos =  ['video01', 'video02', 'video05', 'video08', 'video09', 'video12','video14', 'video41','video46', 'video47', 'video61', 'video64'] 			   
 
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
@@ -68,7 +69,7 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = 7
 
 # Dimensions of input feature 
-frames = 15    #Number of frames over which LSTM prediction happens
+frames = 10    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
@@ -151,7 +152,7 @@ def get_VGG16_base():
                  #weights = None, 
                  include_top=False)
   cnn_out = GlobalAveragePooling2D()(cnn_base.output)
-
+  cnn_out = Dropout(rate=0.3)(cnn_out)
   cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
   #Use Transfer learning and train last 15 layers                 
@@ -167,10 +168,13 @@ def get_LSTM_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(2048, name='lstm1', kernel_regularizer=regularizers.l2(0.1),
+                          activity_regularizer=regularizers.l1(0.0005))(encoded_frames)
 
   # RELU or tanh?
-  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+  hidden_layer = Dense(units=2048, activation="relu",kernel_regularizer=regularizers.l2(0.01))(encoded_sequence)
+#                 kernel_regularizer=regularizers.l2(0.05),
+#                 activity_regularizer=regularizers.l1(0.01))(encoded_sequence)
   dropout_layer = Dropout(rate=0.5)(hidden_layer)
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
   
@@ -269,7 +273,7 @@ if __name__ == "__main__":
   print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
   
-  class_weights = [2,1,3,1,3,3,5]
+  #class_weights = [2,1,2,1,2,2,5]
   validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)

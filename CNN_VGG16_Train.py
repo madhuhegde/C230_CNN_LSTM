@@ -67,7 +67,7 @@ frames = 1 #redundant variable. Never change it other than 1
 channels = 3
 rows = 224
 columns = 224 
-BATCH_SIZE = 8
+BATCH_SIZE = 64
 nb_epochs = 2
 
 # Define callback function if detailed log required
