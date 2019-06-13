@@ -72,8 +72,6 @@ train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08'
 aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14',
                 'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
                 'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
-
-
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
