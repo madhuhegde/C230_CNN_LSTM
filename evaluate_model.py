@@ -74,7 +74,7 @@ def evaluate_model(lstm_model, eval_videos, callbacks):
   validation_samples = generate_feature_test_list(eval_image_dir, eval_label_dir, eval_videos)
   #validation_samples = remove_transition_samples(validation_samples, frames)
   validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-  validation_len = (validation_len-2)*BATCH_SIZE*frames
+  validation_len = (validation_len)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
   print ("Validatation Length:{0}".format(validation_len))
 
@@ -108,8 +108,8 @@ def evaluate_model(lstm_model, eval_videos, callbacks):
     #yhat.append(pred_batch)
     if steps >= num_batches: break
 
-  yhat = np.argmax(yhat, axis=1)
-  y =  np.argmax(y, axis=1)
+  #yhat = np.argmax(yhat, axis=1)
+  #y =  np.argmax(y, axis=1)
   
   return(y, yhat)
   
@@ -128,9 +128,9 @@ if __name__ == "__main__":
         
 
 # Dimensions of input feature 
-  frames = #args.frames    #Number of frames over which LSTM prediction happens
+  frames = 10 #args.frames    #Number of frames over which LSTM prediction happens
 
-  BATCH_SIZE = args.batch_size 
+  BATCH_SIZE = 8 #args.batch_size 
 
   #initialize_trans_matrix()
 #Define Input with batch_shape to train stateful LSTM  
@@ -179,20 +179,37 @@ if __name__ == "__main__":
   y = []
   yhat = []
   y_labels = []
-  yhat_labels = []
+  y1_labels = []
+  y1_val = []
+  y2_labels = []
+  y2_val = []
   
   for i in range(len(eval_videos)):
      eval_video = eval_videos[i]
      #eval_video must be a list
-     [y_video, yhat_video] = evaluate_model(lstm_model, eval_video, callbacks)
-     y.extend(y_video)
-     yhat.extend(yhat_video)
-     y1 = [class_labels[j] for j in y_video]
-     y2 = [class_labels[j] for j in yhat_video]
-     y_labels.append(y1)
+     [y_i, yhat_i] = evaluate_model(lstm_model, eval_video, callbacks)
      
-     y2 = predict_next_label(y2)
-     yhat_labels.append(y2)
+     y.extend(np.argmax(y_i, axis=1))
+     yhat.extend(np.argmax(yhat_i,axis=1))
+     
+     #debug code
+     y_i = np.argmax(y_i, axis=1)
+     
+     y_i = [class_labels[j] for j in y_i] 
+     y_labels.append(y_i)
+     
+     yhat_index = np.argsort(-yhat_i, axis=1)
+     yhat_val = -1*np.sort(-yhat_i, axis=1)
+     
+     y1_val.append(yhat_val[:,0])  #best softmax val 
+     y1 = yhat_index[:,0] 
+     y1 = [class_labels[j] for j in y1]
+     y1_labels.append(y1) #best softmax label  
+     
+     y2_val.append(yhat_val[:,1])  #second best softmax val
+     y2 = yhat_index[:,1]
+     y2= [class_labels[j] for j in y2]
+     y2_labels.append(y2) # second best softmax label
  # predfile = open('./logs/predictions_Yhat.txt', 'wt')
  # predfile.write('\r\n'.join(str(p).strip() for p in yhat))
   #predfile.close()
@@ -206,7 +223,7 @@ if __name__ == "__main__":
   #gtfile.close()
 
   #yhat = [class_labels_dict[i] for i in yhat_pred]
-  y_save = [y_labels, yhat_labels]
+  y_save = [y_labels, y1_labels, y1_val, y2_labels, y2_val]
   with open('label_history', 'wb') as file_pi:
         pickle.dump(y_save, file_pi)
 
