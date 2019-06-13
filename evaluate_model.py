@@ -48,7 +48,7 @@ class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutt
 # 7 phases for surgical operation
 class_labels = ["Preparation", "CleaningCoagulation", "GallbladderRetraction"]
            
-class_labels_dict = {"Preparation":0, "CleaningCoagulation":5, "GallbladderRetraction":6}           
+class_labels_dict = {"Preparation":0, "CleaningCoagulation":2, "GallbladderRetraction":3}           
 
 
 num_classes = len(class_labels_dict)

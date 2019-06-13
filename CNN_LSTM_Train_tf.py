@@ -75,8 +75,8 @@ aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51'
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
-
-class_labels = {"Preparation":0,  "CleaningCoagulation":5, "GallbladderRetraction":6}           
+           
+class_labels = {"Preparation":0,  "CleaningCoagulation":2, "GallbladderRetraction":6}           
 
 
 num_classes = len(class_labels)
