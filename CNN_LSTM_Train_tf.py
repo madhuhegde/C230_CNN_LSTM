@@ -65,12 +65,23 @@ train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08'
 aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14', 
                 'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67', 
 				'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
+
+train_videos =  ['video01', 'video02', 'video05', 'video08', 'video09', 'video12','video14', 'video41','video46', 'video47', 'video61', 'video64']
+ 
+train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05']
+aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14',
+                'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
+                'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
+
+
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
+class_labels = {"Preparation":0,  "CleaningCoagulation":5, "GallbladderRetraction":6}           
 
-num_classes = 7
+
+num_classes = len(class_labels)
 
 # Dimensions of input feature 
 frames = 10    #Number of frames over which LSTM prediction happens
