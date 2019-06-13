@@ -45,7 +45,13 @@ class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutt
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}           
 
 
-num_classes = 7
+# 7 phases for surgical operation
+class_labels = ["Preparation", "CleaningCoagulation", "GallbladderRetraction"]
+           
+class_labels_dict = {"Preparation":0, "CleaningCoagulation":5, "GallbladderRetraction":6}           
+
+
+num_classes = len(class_labels_dict)
 
 # Dimensions of input feature 
 frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
@@ -232,9 +238,11 @@ if __name__ == "__main__":
 #print("ground truth", [class_labels[i] for i in y])
 #print("predictions", [class_labels[i] for i in yhat])
 
-  cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
+  #cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
+  cm = confusion_matrix(y, yhat, labels = [0, 5, 6])
   print(cm)
 
-  cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
+  #cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
+  cr = classification_report(y, yhat, [0, 5, 6], class_labels)
   print(cr)
 
