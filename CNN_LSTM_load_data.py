@@ -17,7 +17,7 @@ eval_image_dir = base_image_dir+"eval/"
 
 #class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
 #           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
-class_labels = {"Preparation":0, "CleaningCoagulation":2, "GallbladderRetraction":3}
+class_labels = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}
 
               
 def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
