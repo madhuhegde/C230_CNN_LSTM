@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/Users/madhuhegde/work/cs230/data/more_data/"
+base_dir = "/home/sidhedge2008/cs230/data/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"
@@ -73,7 +73,7 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
      
      #extract images from videos
      
-     #extract_images(video_file, image_folder_name, target_fps)
+     extract_images(video_file, image_folder_name, target_fps)
      
      #resize images to 250 x 250. Currently hardcoded to 250 x 250.
      #existing images are overwritten
@@ -96,17 +96,17 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
   
   
 if __name__ == "__main__":
-     num_train_videos = 40
+     num_train_videos = 78
      num_test_videos = 10
      num_eval_videos = 4
-     target_fps = 2
-     train_video_path = video_base_dir+"train/"
+     target_fps = 5
+     train_video_path = video_base_dir #+"train/"
      test_video_path = video_base_dir+"test/"
      eval_video_path = video_base_dir+"eval/"
-     train_images_path = image_base_dir+"train/"
+     train_images_path = image_base_dir+"train_5fps/"
      test_images_path = image_base_dir+"test/"
      eval_images_path = image_base_dir+"eval/"
-     train_labels_path = label_base_dir+"train/"
+     train_labels_path = label_base_dir+"train_5fps/"
      test_labels_path = label_base_dir+"test/"
      eval_labels_path = label_base_dir+"eval/"
      

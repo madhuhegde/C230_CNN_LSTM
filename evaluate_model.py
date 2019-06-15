@@ -16,13 +16,13 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 from tensorflow.keras.utils import multi_gpu_model
 from tensorflow.keras.models import load_model
 from CNN_LSTM_load_data import  generator_train, generator_test, generator_eval
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, generate_feature_eval_list
+from CNN_LSTM_split_data import generate_feature_augment_list, generate_feature_test_list, generate_feature_eval_list
 from CNN_LSTM_split_data import remove_transition_samples
 from surgical_flow_model import initialize_trans_matrix, predict_next_label
 import pickle
 
 #eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
-eval_videos = [['video12'],['video80'], ['video77'], ['video78'], ['video04']]
+eval_videos = [['video12']] #,['video80'], ['video77'], ['video78'], ['video04']]
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 model_save_dir = config["model_save_dir"]
@@ -48,7 +48,7 @@ class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutt
 # 7 phases for surgical operation
 class_labels = ["Preparation", "CleaningCoagulation", "GallbladderRetraction"]
            
-class_labels_dict = {"Preparation":0, "CleaningCoagulation":2, "GallbladderRetraction":3}           
+class_labels_dict = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}           
 
 
 num_classes = len(class_labels_dict)
@@ -77,8 +77,8 @@ def predict_next_label(new_labels):
 # return y, yhat
 def evaluate_model(lstm_model, eval_videos, callbacks):
   
-  validation_samples = generate_feature_test_list(eval_image_dir, eval_label_dir, eval_videos)
-  #validation_samples = remove_transition_samples(validation_samples, frames)
+  validation_samples = generate_feature_augment_list(eval_image_dir, eval_label_dir, eval_videos)
+  print(len(validation_samples)) ##validation_samples = remove_transition_samples(validation_samples, frames)
   validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
   validation_len = (validation_len)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
@@ -106,6 +106,7 @@ def evaluate_model(lstm_model, eval_videos, callbacks):
 
     # loss = lstm_model.evaluate_generator(validation_generator, steps=int(len(validation_samples)/(BATCH_SIZE*frames)), max_queue_size=10, workers=1, use_multiprocessing=False, verbose=1)
     pred_batch = lstm_model.predict(x = x_batch, verbose=1)
+    print(len(pred_batch))
     print(np.shape(pred_batch)) 
     if yhat is None:
         yhat = pred_batch
@@ -134,9 +135,9 @@ if __name__ == "__main__":
         
 
 # Dimensions of input feature 
-  frames = 10 #args.frames    #Number of frames over which LSTM prediction happens
+  frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
 
-  BATCH_SIZE = 8 #args.batch_size 
+  BATCH_SIZE = 2 #args.batch_size 
 
   #initialize_trans_matrix()
 #Define Input with batch_shape to train stateful LSTM  
@@ -163,10 +164,10 @@ if __name__ == "__main__":
     layer.trainable = False
 
   encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(2048, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(1024, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
-  hidden_layer = Dense(units=2048,  activation="relu")(encoded_sequence)
+  hidden_layer = Dense(units=1024,  activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
 
   dropout_layer = Dropout(rate=0.5)(hidden_layer)
@@ -197,26 +198,25 @@ if __name__ == "__main__":
      
      y.extend(np.argmax(y_i, axis=1))
      yhat.extend(np.argmax(yhat_i,axis=1))
-     
      #debug code
      y_i = np.argmax(y_i, axis=1)
      
      y_i = [class_labels[j] for j in y_i] 
-     y_labels.append(y_i)
+     y_labels.extend(y_i)
      
      yhat_index = np.argsort(-yhat_i, axis=1)
      yhat_val = -1*np.sort(-yhat_i, axis=1)
      
-     y1_val.append(yhat_val[:,0])  #best softmax val 
+     y1_val.extend(yhat_val[:,0])  #best softmax val 
      y1 = yhat_index[:,0] 
      y1 = [class_labels[j] for j in y1]
-     y1_labels.append(y1) #best softmax label  
+     y1_labels.extend(y1) #best softmax label  
      
-     y2_val.append(yhat_val[:,1])  #second best softmax val
+     y2_val.extend(yhat_val[:,1])  #second best softmax val
      y2 = yhat_index[:,1]
      y2= [class_labels[j] for j in y2]
-     y2_labels.append(y2) # second best softmax label
- # predfile = open('./logs/predictions_Yhat.txt', 'wt')
+     y2_labels.extend(y2) # second best softmax label
+     print(len(y1), len(y1_labels)) # predfile = open('./logs/predictions_Yhat.txt', 'wt')
  # predfile.write('\r\n'.join(str(p).strip() for p in yhat))
   #predfile.close()
 
@@ -229,6 +229,7 @@ if __name__ == "__main__":
   #gtfile.close()
 
   #yhat = [class_labels_dict[i] for i in yhat_pred]
+  
   y_save = [y_labels, y1_labels, y1_val, y2_labels, y2_val]
   with open('label_history', 'wb') as file_pi:
         pickle.dump(y_save, file_pi)
@@ -239,10 +240,10 @@ if __name__ == "__main__":
 #print("predictions", [class_labels[i] for i in yhat])
 
   #cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
-  cm = confusion_matrix(y, yhat, labels = [0, 5, 6])
+  cm = confusion_matrix(y, yhat, labels = [0, 1, 2])
   print(cm)
 
   #cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
-  cr = classification_report(y, yhat, [0, 5, 6], class_labels)
+  cr = classification_report(y, yhat, [0, 1, 2], class_labels)
   print(cr)
 
