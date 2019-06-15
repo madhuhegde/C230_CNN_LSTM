@@ -21,10 +21,9 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoa
 from tensorflow.keras.models import load_model
 
 from CNN_LSTM_load_data import  generator_train, generator_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list,  remove_transition_samples
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_augment_list, remove_transition_samples
 
-train_videos = [['video28'],['video41'], ['video46'], ['video47']]
-test_videos = ['video49']
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -41,12 +40,35 @@ train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
 
+				
+		   
+test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27', 'video36', 'video40', 'video44','video49']
+aug_videos = ['video11', 'video15',  'video18', 'video21', 'video22', 'video23', 'video26',
+               'video25', 'video28', 'video30', 'video31',  'video34', 'video35', 'video37', 'video39',
+               'video42', 'video43',  'video45', 'video48', 'video50', 'video51', 'video52', 'video57',  'video60', 'video66',  
+	           'video67', 'video72']
+
+train_videos =  ['video01', 'video02', 'video05', 'video08', 'video09', 'video12','video14', 'video41','video46', 'video47', 'video61', 'video64'] 			   
+
+train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05']
+aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14', 
+                'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67', 
+				'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
+
+train_videos =  ['video01', 'video02', 'video05', 'video08', 'video09', 'video12','video14', 'video41','video46', 'video47', 'video61', 'video64']
+ 
+train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05']
+aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14',
+                'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
+                'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
 
+class_labels = {"Preparation":0,  "CleaningCoagulation":1, "GallbladderRetraction":2}           
 
-num_classes = 7
+
+num_classes = len(class_labels)
 
 # Dimensions of input feature 
 frames = 25    #Number of frames over which LSTM prediction happens
@@ -58,9 +80,21 @@ columns = 224
 BATCH_SIZE = 8# Need GPU with 32 GB RAM for BATCH_SIZE > 16
 nb_epochs = 3 # 
 
-class_weights = [2,2,1,2,2,1,1]
-
 lstm_model = None
+class_weights = [2,2,1,2,2,1,1]
+# Compute class_weights for imbalanced train set
+def compute_class_weight(input_list):
+
+  label_list = []
+  for label in input_list:
+    label = label[1].split('\t')[1].strip()
+    label_list.append(label)
+  
+  class_weights = class_weight.compute_class_weight('balanced', 
+                                                   np.unique(label_list),  
+                                                   label_list)
+                                                   
+  return(class_weights)                                                 
 
 # Define callback function if detailed log required
 class History(tensorflow.keras.callbacks.Callback):
@@ -103,14 +137,14 @@ class CNN_LSTM_ModelCheckpoint(tensorflow.keras.callbacks.Callback):
 def train_stateful_lstm(train_videos, test_videos, callbacks):
 
   print(train_videos)
-  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  train_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, train_videos)
   
   train_samples = remove_transition_samples(train_samples, frames)
   print(len(train_samples))
   #class_weights = compute_class_weight(train_samples)
   
 
-  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
+  validation_samples = generate_feature_augment_list(test_image_dir, test_label_dir, test_videos)
   
   validation_samples = remove_transition_samples(validation_samples, frames)
   
@@ -118,7 +152,7 @@ def train_stateful_lstm(train_videos, test_videos, callbacks):
   train_len = (train_len)*BATCH_SIZE*frames
   train_samples = train_samples[0:train_len]
   validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
-  validation_len = (validation_len-2)*BATCH_SIZE*frames
+  validation_len = (validation_len)*BATCH_SIZE*frames
   validation_samples = validation_samples[0:validation_len]
   print (train_len, validation_len)
 
@@ -144,7 +178,7 @@ def train_stateful_lstm(train_videos, test_videos, callbacks):
 if __name__=="__main__":
   
   #Define Input with batch_shape to train stateful LSTM  
-  video = Input(batch_shape=(BATCH_SIZE, frames,rows,columns,channels))
+  video = Input(shape=(frames,rows,columns,channels))
 
   #load lstm_model with shuffled data
   prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
@@ -168,10 +202,10 @@ if __name__=="__main__":
 
   #LSTM model must match stateless LSTM
   encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(2048, stateful=True, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(1024, stateful=False, name='lstm1')(encoded_frames)
 
   # RELU or tanh?
-  hidden_layer = Dense(units=2048, activation="relu")(encoded_sequence)
+  hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
 
 
   dropout_layer = Dropout(rate=0.5)(hidden_layer)
@@ -185,7 +219,7 @@ if __name__=="__main__":
   #del l_model
 
   #Similar to Adam 
-  optimizer = Nadam(lr=0.00001,
+  optimizer = Nadam(lr=0.0001,
                   beta_1=0.9,
                   beta_2=0.999,
                   epsilon=1e-08,
@@ -199,7 +233,7 @@ if __name__=="__main__":
 #define callback functions
   
   saveCNN_Model = CNN_LSTM_ModelCheckpoint(cnn_model, model_save_dir+"cnn_model_notsaved.h5",
-                                    lstm_model, model_save_dir+"lstm_stateful_model.h5")
+                                    lstm_model, model_save_dir+"lstm_stateless_model.h5")
   history = History()
   callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
                #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
@@ -209,7 +243,8 @@ if __name__=="__main__":
  #             TensorBoard(log_dir='./logs/Graph', histogram_freq=0, write_graph=True, write_images=True)]
  
   
-  for train_video in train_videos:
+  for video in aug_videos:
+    train_video = [video]
     train_stateful_lstm(train_video, test_videos, callbacks)
     lstm_model.reset_states()
 
