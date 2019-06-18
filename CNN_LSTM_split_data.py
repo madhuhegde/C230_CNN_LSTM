@@ -42,6 +42,54 @@ def remove_transition_samples(samples, frames_per_clip = 25):
       smooth_samples.extend(frame_samples)
       
   return(smooth_samples)
+  
+  
+def set_normal_samples(frame_samples,value=0):
+  samples = frame_samples
+  for i in range(len(samples)):
+     samples[i].append(value)
+     
+     
+  return(samples)   
+    
+def set_aug_samples(frame_samples,value=1):
+  samples = frame_samples
+  for sample in samples:
+     sample[2] = (value)
+     #print(sample)
+     
+  return(samples)     
+  
+def augment_label(samples):
+    sample = samples[0]
+    label = sample[1].split('\t')[1].strip()
+    
+    if (label == "Preparation") or (label == "CleaningCoagulation") or (label =="GallbladderRetraction"):
+       return True
+    else:
+       return False   
+       
+       
+  
+def augment_train_samples(samples, frames_per_clip = 25):
+  aug_samples = []
+  num_frames = int(len(samples)/frames_per_clip)
+    
+  
+  for frame_count in range(0, num_frames):
+    
+    sample_start = frame_count*frames_per_clip
+    frame_samples = samples[sample_start:sample_start + frames_per_clip]
+   
+    frame_samples = set_normal_samples(frame_samples,0)
+    
+    aug_samples.extend(frame_samples)
+           
+    if(augment_label(frame_samples)):
+      frame_samples = set_aug_samples(frame_samples,1) 
+      aug_samples.extend(frame_samples)
+      
+  return(aug_samples)  
 
 def generate_feature_augment_list(image_dir, label_dir, video_files):
 

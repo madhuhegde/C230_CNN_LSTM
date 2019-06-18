@@ -49,12 +49,18 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
                 
                 batch_sample = samples[shuffle_order[frames_count]*frames_per_clip+j]
        
+                flip = batch_sample[2]
                 image_file = train_image_dir+batch_sample[0]
                 
                 image = cv2.imread(image_file)
                 image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
                 #image = (image-128.0)/128.0;
                 image = image/255.0  
+                
+                #Data augmentation by Horizontal flip
+                if(flip):
+                  image = cv2.flip(image, 0)
+                  
                 consecutive_images.append(image)
                      
               images.append(consecutive_images)
