@@ -24,7 +24,7 @@ from sklearn.utils import class_weight
 from tensorflow.keras.models import load_model
 from tensorflow.keras import regularizers
 from CNN_LSTM_load_data import  generator_train, generator_test
-from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list
+from CNN_LSTM_split_data import generate_feature_train_list, generate_feature_test_list, augment_train_samples
 from CNN_LSTM_split_data import generate_feature_augment_list, remove_transition_samples
 
 
@@ -56,26 +56,28 @@ test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31',
 test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27', 'video40', 'video44','video49']
 
 
-train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05']
-aug_videos =   ['video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14',
-                'video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
-                'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69']
+train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05',
+                'video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14']
+aug_videos =   ['video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
+                'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69',
+                'video16', 'video19', 'video21', 'video25', 'video26', 'video28', 'video29', 'video62', 'video63', 'video39',
+                'video41', 'video42', 'video43', 'video51', 'video52', 'video53', 'video54', 'video56', 'video60', 'video61']
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
            
-class_labels = {"Preparation":0,  "CleaningCoagulation":1, "GallbladderRetraction":2}           
+#class_labels = {"Preparation":0,  "CleaningCoagulation":1, "GallbladderRetraction":2}           
 
 
 num_classes = len(class_labels)
 
 # Dimensions of input feature 
-frames = 10   #Number of frames over which LSTM prediction happens
+frames = 30   #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
-BATCH_SIZE = 4 
-nb_epochs = 10
+BATCH_SIZE = 6 
+nb_epochs = 16
 
 
 # Compute class_weights for imbalanced train set
@@ -169,11 +171,11 @@ def get_LSTM_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  encoded_sequence = LSTM(1024, name='lstm1', kernel_regularizer=regularizers.l2(0.1),
+  hidden_layer = LSTM(512, name='lstm1', kernel_regularizer=regularizers.l2(0.01),
                           activity_regularizer=regularizers.l1(0.0005))(encoded_frames)
 
   # RELU or tanh?
-  hidden_layer = Dense(units=1024, activation="relu",kernel_regularizer=regularizers.l2(0.01))(encoded_sequence)
+ # hidden_layer = Dense(units=512, activation="relu",kernel_regularizer=regularizers.l2(0.01))(encoded_sequence)
 #                 kernel_regularizer=regularizers.l2(0.05),
 #                 activity_regularizer=regularizers.l1(0.01))(encoded_sequence)
   dropout_layer = Dropout(rate=0.5)(hidden_layer)
@@ -190,13 +192,14 @@ def get_stacked_LSTM_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  first_LSTM_layer = LSTM(1024, return_sequences=True, name='lstm1')(encoded_frames)
-  dropout_layer_1 = Dropout(rate=0.3) (first_LSTM_layer)
+  first_LSTM_layer = LSTM(512, return_sequences=True, name='lstm1', 
+                          kernel_regularizer=regularizers.l2(0.01))(encoded_frames)
+  dropout_layer_1 = Dropout(rate=0.5) (first_LSTM_layer)
   # RELU or tanh?
   #hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
-  second_LSTM_layer = LSTM(1024, name='lstm2')(dropout_layer_1)
+  second_LSTM_layer = LSTM(512, name='lstm2', kernel_regularizer=regularizers.l2(0.01))(dropout_layer_1)
 
-  dropout_layer_2 = Dropout(rate=0.3)(second_LSTM_layer)
+  dropout_layer_2 = Dropout(rate=0.5)(second_LSTM_layer)
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
   
   #create model CNN+LSTM
@@ -264,21 +267,22 @@ if __name__ == "__main__":
               optimizer=optimizer,
               metrics=["categorical_accuracy"]) 
 
-#  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
+  train_samples  = generate_feature_train_list(train_image_dir, train_label_dir, train_videos)
   aug_samples  = generate_feature_augment_list(train_image_dir, train_label_dir, aug_videos)
-#  print(len(train_samples), len(aug_samples))
-#  train_samples.extend(aug_samples)
-  train_samples = aug_samples
+  print(len(train_samples), len(aug_samples))
+  train_samples.extend(aug_samples)
+#  train_samples = aug_samples
   print(len(train_samples))
   
-  train_samples = remove_transition_samples(train_samples, frames)
-  print(len(train_samples))
+#  train_samples = remove_transition_samples(train_samples, frames)
+  #train_samples = augment_train_samples(train_samples)
+  #print(len(train_samples))
   class_weights = compute_class_weight(train_samples)
-  
+  class_weights[6] = class_weights[6]*1.25
   #class_weights = [2,1,2,1,2,2,5]
-  validation_samples = generate_feature_augment_list(test_image_dir, test_label_dir, test_videos)
+  validation_samples = generate_feature_test_list(test_image_dir, test_label_dir, test_videos)
   
-  validation_samples = remove_transition_samples(validation_samples, frames)
+  #validation_samples = remove_transition_samples(validation_samples, frames)
   
   train_len = int(len(train_samples)/(BATCH_SIZE*frames))
   train_len = (train_len)*BATCH_SIZE*frames
@@ -293,7 +297,7 @@ if __name__ == "__main__":
 
   #define callback functions
   history = History()
-  callbacks = [EarlyStopping(monitor='val_categorical_accuracy', patience=3, verbose=2),
+  callbacks = [EarlyStopping(monitor='val_loss', patience=3, verbose=2),
                #ModelCheckpoint(filepath=model_save_dir+'best_model.h5', monitor='val_loss',
                #save_best_only=True),
                history,
