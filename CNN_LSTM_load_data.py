@@ -15,9 +15,9 @@ eval_image_dir = base_image_dir+"eval/"
 #label_dir = base_dir+"labels/"
 
 
-#class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
-#           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
-class_labels = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}
+class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
+           "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
+#class_labels = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}
 
               
 def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
@@ -49,7 +49,7 @@ def generator_train(samples, batch_size=32, frames_per_clip=4, shuffle=True):
                 
                 batch_sample = samples[shuffle_order[frames_count]*frames_per_clip+j]
        
-                flip = batch_sample[2]
+                flip = 0 #batch_sample[2]
                 image_file = train_image_dir+batch_sample[0]
                 
                 image = cv2.imread(image_file)

@@ -42,7 +42,7 @@ train_label_dir = base_label_dir + "train/"
 
 				
 		   
-test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27', 'video36', 'video40', 'video44','video49']
+test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27',  'video40', 'video44','video49']
 aug_videos = ['video11', 'video15',  'video18', 'video21', 'video22', 'video23', 'video26',
                'video25', 'video28', 'video30', 'video31',  'video34', 'video35', 'video37', 'video39',
                'video42', 'video43',  'video45', 'video48', 'video50', 'video51', 'video52', 'video57',  'video60', 'video66',  
@@ -71,13 +71,13 @@ class_labels = {"Preparation":0,  "CleaningCoagulation":1, "GallbladderRetractio
 num_classes = len(class_labels)
 
 # Dimensions of input feature 
-frames = 25    #Number of frames over which LSTM prediction happens
+frames = 20    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
 
 #training parameters
-BATCH_SIZE = 8# Need GPU with 32 GB RAM for BATCH_SIZE > 16
+BATCH_SIZE = 2# Need GPU with 32 GB RAM for BATCH_SIZE > 16
 nb_epochs = 3 # 
 
 lstm_model = None

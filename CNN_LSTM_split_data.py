@@ -117,8 +117,8 @@ def generate_feature_augment_list(image_dir, label_dir, video_files):
       phase = label_split[1].strip()
      
       image_file = label_file+'-'+index+'.jpg'
-      #if(phase != "CalotTriangleDissection") and (phase != "GallbladderDissection"):
-      if(phase == "Preparation") or (phase == "CleaningCoagulation") or (phase =="GallbladderRetraction"):
+      if(phase != "CalotTriangleDissection") and (phase != "GallbladderDissection"):
+      #if(phase == "Preparation") or (phase == "CleaningCoagulation") or (phase =="GallbladderRetraction"):
          aug_labels.append(label)
          local_image_files.append(label_file+'/'+image_file)
       

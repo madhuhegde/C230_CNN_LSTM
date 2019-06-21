@@ -22,7 +22,7 @@ from surgical_flow_model import initialize_trans_matrix, predict_next_label
 import pickle
 
 #eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
-eval_videos = [['video12']] #,['video80'], ['video77'], ['video78'], ['video04']]
+eval_videos = [['video24'],['video80'], ['video77'], ['video78'], ['video04']] #, ['video53'],['video49'],['video17']]
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 model_save_dir = config["model_save_dir"]
@@ -46,19 +46,19 @@ class_labels_dict = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutt
 
 
 # 7 phases for surgical operation
-class_labels = ["Preparation", "CleaningCoagulation", "GallbladderRetraction"]
+#class_labels = ["Preparation", "CleaningCoagulation", "GallbladderRetraction"]
            
-class_labels_dict = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}           
+#class_labels_dict = {"Preparation":0, "CleaningCoagulation":1, "GallbladderRetraction":2}           
 
 
 num_classes = len(class_labels_dict)
 
 # Dimensions of input feature 
-frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
+frames = 30 #args.frames    #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
-BATCH_SIZE = 8 #args.batch_size
+BATCH_SIZE = 6 #args.batch_size
 
 def predict_next_label(new_labels):
     out_labels = list()
@@ -77,7 +77,7 @@ def predict_next_label(new_labels):
 # return y, yhat
 def evaluate_model(lstm_model, eval_videos, callbacks):
   
-  validation_samples = generate_feature_augment_list(eval_image_dir, eval_label_dir, eval_videos)
+  validation_samples = generate_feature_test_list(eval_image_dir, eval_label_dir, eval_videos)
   print(len(validation_samples)) ##validation_samples = remove_transition_samples(validation_samples, frames)
   validation_len = int(len(validation_samples)/(BATCH_SIZE*frames))
   validation_len = (validation_len)*BATCH_SIZE*frames
@@ -135,16 +135,16 @@ if __name__ == "__main__":
         
 
 # Dimensions of input feature 
-  frames = 15 #args.frames    #Number of frames over which LSTM prediction happens
+  frames = 30 #args.frames    #Number of frames over which LSTM prediction happens
 
-  BATCH_SIZE = 2 #args.batch_size 
+  BATCH_SIZE = 6 #args.batch_size 
 
   #initialize_trans_matrix()
 #Define Input with batch_shape to train stateful LSTM  
   video = Input(shape=(frames,rows,columns,channels))
 
 #load lstm_model with shuffled data
-  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  prev_lstm_model = load_model(model_save_dir+'lstm_model_june20_7am.h5')
   lstm_weights = list()
 
 #load pretrained weights
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
 # print summary and clear model    
   prev_lstm_model.summary
-  del prev_lstm_model
+  lstm_model = prev_lstm_model #del prev_lstm_model
 
 #load pre-trained cnn model
   cnn_model = load_model(model_save_dir+'cnn_model.h5')
@@ -164,23 +164,23 @@ if __name__ == "__main__":
     layer.trainable = False
 
   encoded_frames = TimeDistributed(cnn_model)(video)
-  encoded_sequence = LSTM(1024, name='lstm1')(encoded_frames)
+  encoded_sequence = LSTM(512, name='lstm1')(encoded_frames)
 
 # RELU or tanh?
-  hidden_layer = Dense(units=1024,  activation="relu")(encoded_sequence)
+  #hidden_layer = Dense(units=512,  activation="relu")(encoded_sequence)
 #hidden_layer = Dense(units=512, activation="tanh")(encoded_sequence)
 
-  dropout_layer = Dropout(rate=0.5)(hidden_layer)
+  dropout_layer = Dropout(rate=0.5)(encoded_sequence) #(hidden_layer)
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
-  lstm_model = Model(video, outputs)
-
-  for i in range(len(lstm_model.layers)):
-     lstm_model.layers[i].set_weights(lstm_weights[i])
+  #lstm_model = Model(video, outputs)
+ 
+  #for i in range(len(lstm_model.layers)):
+  #   lstm_model.layers[i].set_weights(lstm_weights[i])
 
 
 # load weights into new model
   #print("Loading model from {0}".format(args.model))
-  #lstm_model = load_model(args.model)
+  #lstm_model = load_model(model_save_dir+'lstm_model.h5') #args.model)
   lstm_model.summary()
   callbacks = []
   y = []
@@ -239,11 +239,11 @@ if __name__ == "__main__":
 #print("ground truth", [class_labels[i] for i in y])
 #print("predictions", [class_labels[i] for i in yhat])
 
-  #cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
-  cm = confusion_matrix(y, yhat, labels = [0, 1, 2])
+  cm = confusion_matrix(y, yhat, labels = [0, 1, 2, 3, 4, 5, 6])
+  #cm = confusion_matrix(y, yhat, labels = [0, 1, 2])
   print(cm)
 
-  #cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
-  cr = classification_report(y, yhat, [0, 1, 2], class_labels)
+  cr = classification_report(y, yhat, [0, 1, 2, 3, 4, 5, 6], class_labels)
+  #cr = classification_report(y, yhat, [0, 1, 2], class_labels)
   print(cr)
 
