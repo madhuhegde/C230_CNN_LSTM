@@ -43,25 +43,23 @@ test_label_dir = base_label_dir + "test/"
 train_image_dir = base_image_dir + "train/"
 train_label_dir = base_label_dir + "train/"
 
-
-train_videos = ['video02', 'video04', 'video05', 'video10', 'video11','video12', 'video13', 'video14', 
-                'video15', 'video17']
-				
-aug_videos = ['video36', 'video37', 'video41', 'video43', 'video48','video49', 'video50', 'video51', 
-                'video53', 'video60', 'video61', 'video65']		
-				
-test_videos = ['video06', 'video16', 'video20', 'video23', 'video27', 'video31', 'video33', 'video35', 
-               'video44', 'video45', 'video47', 'video55', 'video57']
 			   
-test_videos = ['video04',  'video12', 'video16', 'video17', 'video24', 'video27', 'video40', 'video44','video49']
+train_videos = ['video41', 'video64', 'video43',  'video57',  'video58', 'video10', 'video45', 'video05', 
+                 'video18', 'video30', 'video02', 'video13',  'video59', 'video34', 'video33', 'video14', 'video69']
+                 
+                
+aug_videos = [ 'video01',	'video03',	'video06',	'video07',	 
+               'video11',	'video12',	'video16',	'video17',	'video19', 
+               'video21',	'video22',	'video23',	'video25',	'video26',	'video28',	'video29', 
+               'video32',	'video37',	'video38',	'video39', 
+               'video42',	'video48',	'video49',  'video50',
+               'video52',	'video53',	'video54',	'video56',	'video60',
+               'video61',	'video62',	'video63',	'video65',	'video66',	'video67',  'video70',
+               'video71',	'video72',	'video73',	'video75',	'video76',	'video78',	'video80']
 
-
-train_videos = ['video41', 'video64', 'video43', 'video04', 'video57', 'video08', 'video58', 'video10', 'video45', 'video05',
-                'video27', 'video18', 'video30', 'video02', 'video13', 'video51', 'video59', 'video34', 'video33', 'video14']
-aug_videos =   ['video11', 'video15', 'video48', 'video09', 'video17', 'video46', 'video07', 'video49', 'video06', 'video67',
-                'video23', 'video01', 'video66', 'video61', 'video03', 'video32', 'video16', 'video22', 'video72', 'video69',
-                'video16', 'video19', 'video21', 'video25', 'video26', 'video28', 'video29', 'video62', 'video63', 'video39',
-                'video41', 'video42', 'video43', 'video51', 'video52', 'video53', 'video54', 'video56', 'video60', 'video61']
+test_videos = ['video04', 'video08', 'video09', 'video15', 'video24', 'video27', 'video40', 'video44', 'video46', 'video51']
+eval_videos = ['video20', 'video31', 'video35', 'video36', 'video47', 'video55', 'video68', 'video74', 'video77', 'video79']
+                               
 # 7 phases for surgical operation
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}

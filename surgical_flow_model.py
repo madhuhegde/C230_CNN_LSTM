@@ -3,69 +3,112 @@ import copy
 class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":2, 
            "GallbladderDissection":3, "GallbladderPackaging":4, "CleaningCoagulation":5, "GallbladderRetraction":6}
            
-transition_matrix = {}           
-surgical_phase = {'next_labels':[], 'curr_duration':0, 'min_duration':4, 'max_duration':10000, 'min_probability':0.1} 
-
-def allowed_transition(history, new_label, prev_label, timeout_started):
-    
-  if ((history[0] == new_label) and (history[1]==new_label)): # and (prev_label=new_label)):
-     return(True)
-  
-  allowed_labels_1 = transition_matrix[prev_label]['next_labels']
-  allowed_labels_2 = transition_matrix[history[0]]['next_labels']
-  allowed_labels_3 = transition_matrix[history[1]]['next_labels']
-    
-  if(timeout_started):
-    if((new_label in allowed_labels_2) or (new_label in allowed_labels_3)): 
-                                         #or (new_label in allowed_labels_3))):
-      return(True)
-     
-  return(False)
-  
-def initialize_trans_matrix():
-
-  
+surgical_phase = {'curr_duration':0, 'min_duration':4, 'max_duration':10000, 'min_probability':0.1} 
+           
+class surgical_flow():
  
-
-  for label in class_labels:
-    transition_matrix[label] = copy.deepcopy(surgical_phase)
-
-  #initialize surgical phases
-  transition_matrix["Preparation"]["next_labels"] = ["CalotTriangleDissection"]
-  transition_matrix["CalotTriangleDissection"]["next_labels"] = ["ClippingCutting"]
-  transition_matrix["ClippingCutting"]["next_labels"] = ["GallbladderDissection"]
-  transition_matrix["GallbladderDissection"]["next_labels"] = ["CleaningCoagulation","GallbladderPackaging"]
-  transition_matrix["GallbladderPackaging"]["next_labels"] = ["CleaningCoagulation", "GallbladderRetraction"]
-  transition_matrix["CleaningCoagulation"]["next_labels"] = ["GallbladderPackaging", "GallbladderRetraction"]
-  transition_matrix["CalotTriangleDissection"]["min_duration"] = 10
-  transition_matrix["GallbladderDissection"]["min_duration"] = 10
-  transition_matrix["GallbladderRetraction"]["min_duration"] = 4
-  
-  return
-  
-  
-def predict_next_label(new_labels):
-  pred_labels = list()
-  prev_label = "Preparation"
-  
-  # Use two level deep history
-  label_history = ["Preparation", "Preparation"]
-  for label in new_labels:
+  def __init__(self):
+    self.history = "Preparation"
+    self.curr_label = "Preparation"
+    self.early_phase_count =0
+    self.late_phase_count = 0
+    self.early_phases = ["Preparation", "CalotTriangleDissection"]
+    self.late_phases = ["GallbladderDissection", "GallbladderPackaging", "CleaningCoagulation", "GallbladderRetraction"]
+    self.late_phase = False
+    self.early_phase = False  
+    self.surgical_phases = {}  
+    for label in class_labels:
+       self.surgical_phases[label] = copy.deepcopy(surgical_phase)
+               
+    return
     
-    #print(transition_matrix[prev_label]['curr_duration'])
-    timeout_started= (transition_matrix[prev_label]['curr_duration'] > transition_matrix[prev_label]['min_duration'])
-   
-    if(allowed_transition(label_history,label, prev_label, timeout_started)):
-        prev_label  = label
     
-    transition_matrix[prev_label]['curr_duration'] = transition_matrix[prev_label]['curr_duration'] + 1
-    pred_labels.append(prev_label)
+  def set_curr_phase(self, label): 
+     if (self.history == label): 
+        if(self.curr_label != label):
+                self.curr_label = label
+                
+     self.history = label  
+        
+     return(self.curr_label)
+     
+  def reset_early_late_phase(self):
+     self.late_phase = False   
+     self.early_phase = False
+     self.early_phase_count =0
+     self.late_phase_count = 0
+     print("Reset count\n")
+     return
+     
+  def  set_early_late_phase(self, label):
+      if(label == "CalotTriangleDissection"):
+         self.early_phase_count += 1
+         
+      if(label == "GallbladderDissection"):
+         self.late_phase_count += 1   
+         
+      if(self.early_phase_count > 20):
+           self.early_phase = True
+           
+      if(self.early_phase_count > 30) and (self.late_phase_count > 20):
+           self.late_phase = True
+      return   
       
-    
-    label_history[1] = label_history[0]
-    label_history[0] = label    
-    
+  def predict_phase(self, label, second_label, label_gt):
+      
+      curr_label =  self.set_curr_phase(label)   
+      pred_label = curr_label
+      
+      if (self.late_phase):
+        if (curr_label not in self.late_phases):
+          if(second_label in self.late_phases):
+             pred_label = second_label
+             print(label, curr_label, second_label, label_gt)
+      else:
+         if(self.early_phase == False) and (curr_label not in self.early_phases):
+           if(second_label in self.early_phases):
+             pred_label = second_label
+             print(label, curr_label, second_label, label_gt)   
+                 
+      
+      self.set_early_late_phase(pred_label)      
+      
+      return(pred_label)
+      
+      
+  def not_used(self):    
+      if(self.late_phase):
+        if(self.early_phase):
+           if (curr_label in self.late_phases):
+              pred_label = curr_label
+           else:
+               pred_label = second_label
+               
+        else:
+           pred_label = curr_label      
+         
+      else:
+        if(self.early_phase):
+           pred_label = curr_label
           
-  return(pred_labels)    
+        else:
+           if (curr_label in self.early_phases):
+              pred_label = curr_label
+           else:
+               pred_label = second_label   
+               
+      self.set_early_late_phase(pred_label)        
+               
+      return(pred_label) 
+               
+                 
+         
+     #self.surgical_phases[label].curr_duration += 1      
+         
+
+
+
+#if __name__==__main__:
+  
   
   
