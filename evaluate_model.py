@@ -21,8 +21,9 @@ from CNN_LSTM_split_data import remove_transition_samples
 from surgical_flow_model import initialize_trans_matrix, predict_next_label
 import pickle
 
-#eval_videos = [['video04'],  ['video12'], ['video17'], ['video24'], ['video36'], ['video40'], ['video53']]
-eval_videos = [['video24'],['video80'], ['video77'], ['video78'], ['video04']] #, ['video53'],['video49'],['video17']]
+
+#eval_videos = [['video24'],['video80'], ['video77'], ['video78'], ['video04']] #, ['video53'],['video49'],['video17']]
+eval_videos = ['video20', 'video31', 'video35', 'video36', 'video47', 'video55', 'video68', 'video74', 'video77', 'video79']
 config = json.load(open('config/config.json'))
 base_dir = config['base_dir']
 model_save_dir = config["model_save_dir"]
@@ -192,7 +193,7 @@ if __name__ == "__main__":
   y2_val = []
   
   for i in range(len(eval_videos)):
-     eval_video = eval_videos[i]
+     eval_video = [eval_videos[i]]
      #eval_video must be a list
      [y_i, yhat_i] = evaluate_model(lstm_model, eval_video, callbacks)
      
