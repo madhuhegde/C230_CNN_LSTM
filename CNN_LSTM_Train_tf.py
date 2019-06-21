@@ -144,6 +144,17 @@ def get_VGG16_model():
     layer.trainable = False        
     
   return(cnn_model)  
+  
+def get_VGG16_train_model():
+
+  #load pre-trained cnn model
+  cnn_model = load_model(model_save_dir+'cnn_model.h5')
+
+  #freeze cnn weights for LSTM training
+  for layer in cnn_model.layers:
+    layer.trainable = False        
+    
+  return(cnn_model)    
         
 def get_VGG16_base():
 
@@ -205,20 +216,58 @@ def get_stacked_LSTM_model(input, base_model):
   
   return(l_model)  
   
+def get_stacked_LSTM_train_model(input, base_model):
+
+  #load lstm_model with shuffled data
+  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  lstm_weights = list()
+
+  #load pretrained weights
+  for layer in prev_lstm_model.layers:
+     weights = layer.get_weights()
+     lstm_weights.append(weights)
+
+  # print summary and clear model    
+  prev_lstm_model.summary
+  del prev_lstm_model
+
+  #Build LSTM network
+  encoded_frames = TimeDistributed(base_model)(input)
+  first_LSTM_layer = LSTM(512, return_sequences=True, name='lstm1',
+                          kernel_regularizer=regularizers.l2(0.01))(encoded_frames)
+  dropout_layer_1 = Dropout(rate=0.5) (first_LSTM_layer)
+  # RELU or tanh?
+  #hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
+  second_LSTM_layer = LSTM(512, name='lstm2',
+                           kernel_regularizer=regularizers.l2(0.01))(dropout_layer_1)
+
+  dropout_layer_2 = Dropout(rate=0.5)(second_LSTM_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
+  
+  #create model CNN+LSTM
+  l_model = Model(input, outputs) 
+  
+  for i in range(len(l_model.layers)):
+    l_model.layers[i].set_weights(lstm_weights[i])
+  
+  return(l_model)      
+  
   
 # Function pointers for models
   
 cnn_func_ptr = {
  'VGG16_SPLIT_LSTM' : get_VGG16_model,
  'VGG16_NORM_LSTM' : get_VGG16_base,
- 'VGG16_STACKED_LSTM' : get_VGG16_base
+ 'VGG16_STACKED_LSTM' : get_VGG16_base,
+ 'VGG16_STACKED_LSTM_ONLY' : get_VGG16_train_model,
  
 }     
   
 lstm_func_ptr = {
  'VGG16_SPLIT_LSTM' : get_LSTM_model,
  'VGG16_NORM_LSTM' : get_LSTM_model,
- 'VGG16_STACKED_LSTM' : get_stacked_LSTM_model
+ 'VGG16_STACKED_LSTM' : get_stacked_LSTM_model,
+ 'VGG16_STACKED_LSTM_ONLY': get_stacked_LSTM_train_model
  
 }   
   
