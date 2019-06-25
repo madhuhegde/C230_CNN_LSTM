@@ -70,11 +70,11 @@ class_labels = {"Preparation":0, "CalotTriangleDissection":1, "ClippingCutting":
 num_classes = len(class_labels)
 
 # Dimensions of input feature 
-frames = 30   #Number of frames over which LSTM prediction happens
+frames = 25   #Number of frames over which LSTM prediction happens
 channels = 3  #RGB
 rows = 224    
 columns = 224 
-BATCH_SIZE = 6 
+BATCH_SIZE = 8 
 nb_epochs = 16
 
 
@@ -151,7 +151,7 @@ def get_VGG16_train_model():
   cnn_model = load_model(model_save_dir+'cnn_model.h5')
 
   #freeze cnn weights for LSTM training
-  for layer in cnn_model.layers:
+  for layer in cnn_model.layers[:-15]:
     layer.trainable = False        
     
   return(cnn_model)    
@@ -164,7 +164,7 @@ def get_VGG16_base():
                  #weights = None, 
                  include_top=False)
   cnn_out = GlobalAveragePooling2D()(cnn_base.output)
-  cnn_out = Dropout(rate=0.3)(cnn_out)
+  cnn_out = Dropout(rate=0.5)(cnn_out)
   cnn_model = Model(inputs=cnn_base.input, outputs=cnn_out)
 
   #Use Transfer learning and train last 15 layers                 
@@ -180,7 +180,7 @@ def get_LSTM_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  hidden_layer = LSTM(512, name='lstm1', kernel_regularizer=regularizers.l2(0.01),
+  hidden_layer = LSTM(2048, name='lstm1', kernel_regularizer=regularizers.l2(0.1),
                           activity_regularizer=regularizers.l1(0.0005))(encoded_frames)
 
   # RELU or tanh?
@@ -196,17 +196,56 @@ def get_LSTM_model(input, base_model):
   return(l_model)
   
   
+def get_LSTM_train_model(input, base_model):
+
+
+  #load lstm_model with shuffled data
+  prev_lstm_model = load_model(model_save_dir+'lstm_model.h5')
+  lstm_weights = list()
+
+  #load pretrained weights
+  for layer in prev_lstm_model.layers:
+     weights = layer.get_weights()
+     lstm_weights.append(weights)
+
+  # print summary and clear model    
+  prev_lstm_model.summary
+  del prev_lstm_model
+
+  #Build LSTM network
+  encoded_frames = TimeDistributed(base_model)(input)
+  hidden_layer = LSTM(2048, name='lstm1', kernel_regularizer=regularizers.l2(0.1),
+                          activity_regularizer=regularizers.l1(0.0005))(encoded_frames)
+
+  # RELU or tanh?
+ # hidden_layer = Dense(units=512, activation="relu",kernel_regularizer=regularizers.l2(0.01))(encoded_sequence)
+#                 kernel_regularizer=regularizers.l2(0.05),
+#                 activity_regularizer=regularizers.l1(0.01))(encoded_sequence)
+  dropout_layer = Dropout(rate=0.5)(hidden_layer)
+  outputs = Dense(units=num_classes, activation="softmax")(dropout_layer)
+  
+  #create model CNN+LSTM
+  l_model = Model(input, outputs) 
+  
+  
+  for i in range(len(l_model.layers)):
+    l_model.layers[i].set_weights(lstm_weights[i])
+  
+  
+  return(l_model)
+    
+  
   
 def get_stacked_LSTM_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  first_LSTM_layer = LSTM(512, return_sequences=True, name='lstm1', 
-                          kernel_regularizer=regularizers.l2(0.01))(encoded_frames)
+  first_LSTM_layer = LSTM(1024, return_sequences=True, name='lstm1', 
+                          kernel_regularizer=regularizers.l2(0.1))(encoded_frames)
   dropout_layer_1 = Dropout(rate=0.5) (first_LSTM_layer)
   # RELU or tanh?
   #hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
-  second_LSTM_layer = LSTM(512, name='lstm2', kernel_regularizer=regularizers.l2(0.01))(dropout_layer_1)
+  second_LSTM_layer = LSTM(1024, name='lstm2', kernel_regularizer=regularizers.l2(0.1))(dropout_layer_1)
 
   dropout_layer_2 = Dropout(rate=0.5)(second_LSTM_layer)
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
@@ -233,13 +272,13 @@ def get_stacked_LSTM_train_model(input, base_model):
 
   #Build LSTM network
   encoded_frames = TimeDistributed(base_model)(input)
-  first_LSTM_layer = LSTM(512, return_sequences=True, name='lstm1',
-                          kernel_regularizer=regularizers.l2(0.01))(encoded_frames)
+  first_LSTM_layer = LSTM(1024, return_sequences=True, name='lstm1',
+                          kernel_regularizer=regularizers.l2(0.1))(encoded_frames)
   dropout_layer_1 = Dropout(rate=0.5) (first_LSTM_layer)
   # RELU or tanh?
   #hidden_layer = Dense(units=1024, activation="relu")(encoded_sequence)
-  second_LSTM_layer = LSTM(512, name='lstm2',
-                           kernel_regularizer=regularizers.l2(0.01))(dropout_layer_1)
+  second_LSTM_layer = LSTM(1024, name='lstm2',
+                           kernel_regularizer=regularizers.l2(0.1))(dropout_layer_1)
 
   dropout_layer_2 = Dropout(rate=0.5)(second_LSTM_layer)
   outputs = Dense(units=num_classes, activation="softmax")(dropout_layer_2)
@@ -258,16 +297,18 @@ def get_stacked_LSTM_train_model(input, base_model):
 cnn_func_ptr = {
  'VGG16_SPLIT_LSTM' : get_VGG16_model,
  'VGG16_NORM_LSTM' : get_VGG16_base,
+ 'VGG16_NORM_LSTM_RETRAIN' : get_VGG16_train_model,
  'VGG16_STACKED_LSTM' : get_VGG16_base,
- 'VGG16_STACKED_LSTM_ONLY' : get_VGG16_train_model,
+ 'VGG16_STACKED_LSTM_RETRAIN' : get_VGG16_train_model,
  
 }     
   
 lstm_func_ptr = {
  'VGG16_SPLIT_LSTM' : get_LSTM_model,
  'VGG16_NORM_LSTM' : get_LSTM_model,
+ 'VGG16_NORM_LSTM_RETRAIN': get_LSTM_train_model,
  'VGG16_STACKED_LSTM' : get_stacked_LSTM_model,
- 'VGG16_STACKED_LSTM_ONLY': get_stacked_LSTM_train_model
+ 'VGG16_STACKED_LSTM_RETRAIN': get_stacked_LSTM_train_model
  
 }   
   
