@@ -2,7 +2,7 @@ import io
 import os
 import subprocess
 import glob
-base_dir = "/home/sidhedge2008/cs230/data/"
+base_dir = "/home/mhegde/cs230/data/"
 phase_gt_dir = base_dir+"phase_annotations/"
 video_base_dir = base_dir+"videos/"
 image_base_dir = base_dir+"images/"
@@ -96,19 +96,15 @@ def process_videos(video_dir, image_dir, label_dir, num_videos=1, target_fps=5):
   
   
 if __name__ == "__main__":
-     num_train_videos = 78
-     num_test_videos = 10
-     num_eval_videos = 4
+     num_train_videos = 80
+    
      target_fps = 5
      train_video_path = video_base_dir #+"train/"
-     test_video_path = video_base_dir+"test/"
-     eval_video_path = video_base_dir+"eval/"
-     train_images_path = image_base_dir+"train_5fps/"
-     test_images_path = image_base_dir+"test/"
-     eval_images_path = image_base_dir+"eval/"
-     train_labels_path = label_base_dir+"train_5fps/"
-     test_labels_path = label_base_dir+"test/"
-     eval_labels_path = label_base_dir+"eval/"
+     
+     train_images_path = image_base_dir+"train/"
+     
+     train_labels_path = label_base_dir+"train/"
+    
      
      train_num = process_videos(train_video_path, train_images_path, train_labels_path, num_train_videos, target_fps)
      #test_num = process_videos(test_video_path, test_images_path, test_labels_path, num_test_videos, target_fps)
